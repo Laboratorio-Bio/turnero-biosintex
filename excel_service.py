@@ -26,13 +26,25 @@ def get_excel_last_modified():
         return None
 
 def get_turnos_df():
+    """Get OC data from Hoja1"""
     if not os.path.exists(EXCEL_FILE):
         return pd.DataFrame()
     try:
-        df = pd.read_excel(EXCEL_FILE, header=2)
+        df = pd.read_excel(EXCEL_FILE, sheet_name='Hoja1', header=2)
         return df
     except Exception as e:
-        print(f"Error reading Excel: {e}")
+        print(f"Error reading Hoja1: {e}")
+        return pd.DataFrame()
+
+def get_proveedores_df():
+    """Get proveedores from 'Listado de proveedores' sheet"""
+    if not os.path.exists(EXCEL_FILE):
+        return pd.DataFrame()
+    try:
+        df = pd.read_excel(EXCEL_FILE, sheet_name='Listado de proveedores', header=2)
+        return df
+    except Exception as e:
+        print(f"Error reading 'Listado de proveedores': {e}")
         return pd.DataFrame()
 
 def get_oc_details_list(proveedor_id, oc_number):

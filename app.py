@@ -7,7 +7,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, jso
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 
 from models import db, User, Shift, BlockedDay
-from excel_service import get_oc_details_list, get_supplier_info, get_turnos_df, normalize_planta, get_excel_last_modified
+from excel_service import get_oc_details_list, get_supplier_info, get_turnos_df, normalize_planta, get_excel_last_modified, get_proveedores_df
 from werkzeug.utils import secure_filename
 
 # Días feriados de ejemplo (Argentina)
@@ -37,14 +37,27 @@ def generate_random_password(length=8):
     return ''.join(random.choice(chars) for _ in range(length))
 
 def sync_proveedores_from_excel():
-    df = get_turnos_df()
+    """Sync proveedores from 'Listado de proveedores' sheet"""
+    df = get_proveedores_df()
+    if df.empty:
+        print("No se encontró hoja 'Listado de proveedores', intentando con Hoja1...")
+        df = get_turnos_df()
     if df.empty:
         return []
     
-    prov_col = next((c for c in df.columns if 'Proveedor' in str(c) and 'Nombre' not in str(c) and 'Codigo' not in str(c)), None)
-    name_col = next((c for c in df.columns if 'Nombre_2' in str(c)), None)
+    # Try to find columns - flexible matching
+    prov_col = None
+    name_col = None
+    
+    for c in df.columns:
+        c_str = str(c)
+        if prov_col is None and ('Proveedor' in c_str or 'Nro' in c_str) and 'Nombre' not in c_str and 'Codigo' not in c_str:
+            prov_col = c
+        if name_col is None and ('Nombre' in c_str or 'Raz' in c_str):
+            name_col = c
     
     if not prov_col:
+        print("No se encontró columna de proveedor")
         return []
     
     proveedores_en_excel = df[prov_col].dropna().unique()
