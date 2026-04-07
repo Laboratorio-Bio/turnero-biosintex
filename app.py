@@ -45,22 +45,7 @@ def sync_proveedores_from_excel():
     if df.empty:
         return []
     
-    # Try to find columns - flexible matching
-    prov_col = None
-    name_col = None
-    
-    for c in df.columns:
-        c_str = str(c)
-        if prov_col is None and ('Proveedor' in c_str or 'Nro' in c_str) and 'Nombre' not in c_str and 'Codigo' not in c_str:
-            prov_col = c
-        if name_col is None and ('Nombre' in c_str or 'Raz' in c_str):
-            name_col = c
-    
-    if not prov_col:
-        print("No se encontró columna de proveedor")
-        return []
-    
-    proveedores_en_excel = df[prov_col].dropna().unique()
+    proveedores_en_excel = df['proveedor_id'].dropna().unique()
     nuevos_proveedores = []
     
     for prov_id in proveedores_en_excel:
@@ -68,11 +53,8 @@ def sync_proveedores_from_excel():
         
         existing = User.query.filter_by(proveedor_id=prov_id_str, role='proveedor').first()
         if not existing:
-            name = ""
-            if name_col:
-                name_match = df[df[prov_col].astype(str) == prov_id_str]
-                if not name_match.empty:
-                    name = str(name_match.iloc[0][name_col])
+            name_match = df[df['proveedor_id'] == prov_id]
+            name = str(name_match.iloc[0]['nombre']) if not name_match.empty else ""
             
             password = generate_random_password()
             new_user = User(

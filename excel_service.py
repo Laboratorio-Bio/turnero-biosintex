@@ -41,7 +41,12 @@ def get_proveedores_df():
     if not os.path.exists(EXCEL_FILE):
         return pd.DataFrame()
     try:
-        df = pd.read_excel(EXCEL_FILE, sheet_name='Listado de proveedores', header=2)
+        # No tiene header, los datos empiezan en la primera fila
+        df = pd.read_excel(EXCEL_FILE, sheet_name='Listado de proveedores', header=None)
+        # Renombrar columnas
+        df.columns = ['proveedor_id', 'nombre']
+        # Filtrar filas que no sean headers o texto
+        df = df[df['proveedor_id'].apply(lambda x: isinstance(x, (int, float)) or (isinstance(x, str) and x.isdigit()))]
         return df
     except Exception as e:
         print(f"Error reading 'Listado de proveedores': {e}")
