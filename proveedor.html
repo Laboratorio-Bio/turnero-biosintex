@@ -459,25 +459,51 @@
         const pallets = parseInt(document.getElementById('pallets_input').value) || 1;
         if (!date || !currentOC) return;
 
+        // Normalizar fecha seleccionada para comparar
+        const selectedDateStr = new Date(date + "T12:00:00").toISOString().split('T')[0];
+
         // Validaciones Básicas
         const d = new Date(date + "T12:00:00");
         if (d.getDay() === 0 || d.getDay() === 6) { alert("Los turnos son solo de Lunes a Viernes."); dateInput.value = ""; return; }
-        if (CONFIG.FERIADOS_2026.includes(date)) { alert("El día seleccionado es feriado."); dateInput.value = ""; return; }
-        if (blockedDates.includes(date)) { alert("Este día ha sido bloqueado por el supervisor."); dateInput.value = ""; return; }
+        if (CONFIG.FERIADOS_2026.includes(selectedDateStr)) { alert("El día seleccionado es feriado."); dateInput.value = ""; return; }
+        
+        // Comprobar bloqueos manuales
+        const isBlocked = blockedDates.some(bd => {
+            const bDate = new Date(bd);
+            return !isNaN(bDate) && bDate.toISOString().split('T')[0] === selectedDateStr;
+        });
+        if (isBlocked) { alert("Este día ha sido bloqueado por el supervisor."); dateInput.value = ""; return; }
 
         const requiredBlocks = Math.ceil(pallets / 5);
-        const bookedShifts = (db.TURNOS || []).filter(s => s.fecha === date && s.planta === currentOC.planta && s.estado === 'Confirmado');
-        const bookedTimes = bookedShifts.map(s => s.hora);
-
         const allSlots = ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00"];
-        const available = [];
+        
+        // Calcular TODAS las horas ya ocupadas en esa planta/fecha
+        const bookedTimes = new Set();
+        (db.TURNOS || []).forEach(s => {
+            const sDate = new Date(s.fecha);
+            const sDateStr = !isNaN(sDate) ? sDate.toISOString().split('T')[0] : String(s.fecha);
+            
+            if (sDateStr === selectedDateStr && s.planta === currentOC.planta && s.estado === 'Confirmado') {
+                const startIdx = allSlots.indexOf(s.hora);
+                if (startIdx !== -1) {
+                    const blocks = Math.ceil((parseInt(s.pallets) || 1) / 5);
+                    for (let i = 0; i < blocks; i++) {
+                        if (startIdx + i < allSlots.length) {
+                            bookedTimes.add(allSlots[startIdx + i]);
+                        }
+                    }
+                }
+            }
+        });
 
+        const available = [];
         for (let i = 0; i < allSlots.length; i++) {
-            if (requiredBlocks > 1 && allSlots[i] === "12:00") continue; // No entra uno de 2h a las 12
+            // Un turno no puede empezar a las 12:00 si necesita más de 1 bloque
+            if (requiredBlocks > 1 && i + requiredBlocks > allSlots.length) continue; 
             
             let canFit = true;
             for (let j = 0; j < requiredBlocks; j++) {
-                if (i + j >= allSlots.length || bookedTimes.includes(allSlots[i+j])) {
+                if (i + j >= allSlots.length || bookedTimes.has(allSlots[i+j])) {
                     canFit = false; break;
                 }
             }
