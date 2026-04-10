@@ -1,0 +1,23 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Biosintex | Portal de Turnos</title>
+</head>
+<body>
+    <script>
+        const sessionStr = localStorage.getItem('biosintex_session');
+        if (!sessionStr) {
+            window.location.href = 'login.html';
+        } else {
+            const user = JSON.parse(sessionStr);
+            if (user.rol === 'supervisor') {
+                window.location.href = 'supervisor.html';
+            } else {
+                window.location.href = 'proveedor.html';
+            }
+        }
+    </script>
+</body>
+</html>
