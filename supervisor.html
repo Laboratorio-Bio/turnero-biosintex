@@ -56,6 +56,26 @@
     </div>
 </main>
 
+<!-- Modal de Detalles del Turno -->
+<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
+        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold">Detalles del Turno</h3>
+            <button onclick="closeModal()" class="hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-6 space-y-4" id="modalContent">
+            <!-- Cargado por JS -->
+        </div>
+        <div class="bg-gray-50 p-4 border-t flex justify-end gap-3">
+            <button onclick="closeModal()" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">Cerrar</button>
+            <button id="btnCancelarTurno" class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition flex items-center gap-2">
+                <span class="material-symbols-outlined text-sm">cancel</span>
+                Cancelar Turno
+            </button>
+        </div>
+    </div>
+</div>
+
 <script>
     // SESIÓN
     const sessionStr = localStorage.getItem('biosintex_session');
@@ -85,11 +105,59 @@
                 right: 'timeGridWeek,dayGridMonth'
             },
             eventClick: function(info) {
-                const p = info.event.extendedProps;
-                alert(`Turno Detallado:\n\nProveedor: ${p.supplier}\nOC: ${p.oc}\nMaterial: ${p.articulo}\nPallets: ${p.pallets}\nPlanta: ${p.planta}\nHora: ${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hs`);
+                showEventDetails(info.event);
             }
         });
         calendar.render();
+
+        window.closeModal = () => {
+            document.getElementById('eventModal').classList.add('hidden');
+        };
+
+        window.showEventDetails = (event) => {
+            const p = event.extendedProps;
+            const start = event.start;
+            const content = document.getElementById('modalContent');
+            
+            content.innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Proveedor</p><p class="font-semibold">${p.supplier}</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Planta</p><p class="font-semibold">${p.planta}</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Fecha y Hora</p><p class="font-semibold">${start.toLocaleDateString()} - ${start.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})} hs</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Orden de Compra</p><p class="font-bold text-[#004f89]">${p.oc}</p></div>
+                    <div class="col-span-2"><p class="text-xs text-gray-500 font-bold uppercase">Material</p><p class="font-semibold">${p.articulo}</p></div>
+                    <div class="col-span-2"><p class="text-xs text-gray-500 font-bold uppercase">Pallets</p><div class="bg-blue-50 p-2 rounded border border-blue-100 font-bold text-blue-800 text-lg">${p.pallets} Pallets</div></div>
+                </div>
+            `;
+
+            const btn = document.getElementById('btnCancelarTurno');
+            btn.onclick = async () => {
+                if(!confirm(`¿Seguro que desea cancelar el turno de ${p.supplier}?\nEsta acción se reflejará en la planilla de Google automáticamente.`)) return;
+                
+                btn.disabled = true;
+                btn.innerHTML = "Cancelando...";
+                
+                try {
+                    const res = await fetch(CONFIG.API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ action: 'cancel_shift', id: event.id })
+                    });
+                    const r = await res.json();
+                    if(r.success) {
+                        event.remove();
+                        closeModal();
+                        alert("Turno cancelado exitosamente.");
+                    } else throw new Error(r.error);
+                } catch(e) {
+                    alert("Error al cancelar: " + e.message);
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = '<span class="material-symbols-outlined text-sm">cancel</span> Cancelar Turno';
+                }
+            };
+
+            document.getElementById('eventModal').classList.remove('hidden');
+        };
 
         async function safeLoadShifts() {
             try {
