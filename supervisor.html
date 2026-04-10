@@ -124,25 +124,57 @@
 
                     let dateStr = "";
                     let rawFecha = String(s.fecha).trim();
+                    
+                    // Asegurar YYYY-MM-DD
                     if (rawFecha.includes('T')) {
-                        dateStr = rawFecha.split('T')[0];
-                    } else if (rawFecha.includes(' ')) {
-                        dateStr = rawFecha.split(' ')[0];
+                        let parts = rawFecha.split('T')[0].split('-');
+                        if (parts.length === 3) dateStr = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+                    } else if (rawFecha.includes('-')) {
+                        let parts = rawFecha.split(' ')[0].split('-');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) { // YYYY-MM-DD
+                                dateStr = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+                            } else { // DD-MM-YYYY
+                                dateStr = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                            }
+                        }
+                    } else if (rawFecha.includes('/')) {
+                        let parts = rawFecha.split(' ')[0].split('/');
+                        if (parts.length === 3) {
+                            if (parts[0].length === 4) { // YYYY/MM/DD
+                                dateStr = `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}`;
+                            } else { // DD/MM/YYYY
+                                dateStr = `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`;
+                            }
+                        }
                     } else {
-                        dateStr = rawFecha;
+                        // Fallback extremo
+                        try {
+                            let d = new Date(rawFecha);
+                            if (!isNaN(d.getTime())) {
+                                dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+                            }
+                        } catch(e) {}
                     }
                     
                     // Fallback to ensure we have a valid format YYYY-MM-DD
-                    if (!dateStr || dateStr.length < 8) return null;
+                    if (!dateStr || dateStr.length !== 10) return null;
 
                     let timeStr = fixTime(s.hora);
                     const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
 
+                    // Asegurarnos de que el string final sea ISO puro
+                    let startStr = `${dateStr}T${timeStr}:00`;
+                    let endStr = `${dateStr}T${String(parseInt(timeStr.split(':')[0]) + 1).padStart(2,'0')}:${timeStr.split(':')[1]}:00`;
+
+                    // Si incluso después de todo StartStr no genera una fecha válida en Javascript, lo omitimos antes de mandarlo al calendario
+                    if (isNaN(new Date(startStr).getTime())) return null;
+
                     return {
                         id: s.id || idx,
                         title: `OC: ${s.oc} - ${s.nombre_proveedor || s.ombre_proveed || 'S/N'}`,
-                        start: `${dateStr}T${timeStr}:00`,
-                        end: `${dateStr}T${String(parseInt(timeStr.split(':')[0]) + 1).padStart(2,'0')}:${timeStr.split(':')[1]}:00`,
+                        start: startStr,
+                        end: endStr,
                         backgroundColor: color,
                         borderColor: color,
                         extendedProps: {
