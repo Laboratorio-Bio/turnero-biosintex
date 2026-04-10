@@ -122,8 +122,19 @@
                     if (!s.fecha || !s.hora) return null;
                     if (String(s.estado).toLowerCase() === 'cancelado') return null;
 
-                    let d = new Date(s.fecha);
-                    let dateStr = isNaN(d.getTime()) ? String(s.fecha).split('T')[0] : d.toISOString().split('T')[0];
+                    let dateStr = "";
+                    let rawFecha = String(s.fecha).trim();
+                    if (rawFecha.includes('T')) {
+                        dateStr = rawFecha.split('T')[0];
+                    } else if (rawFecha.includes(' ')) {
+                        dateStr = rawFecha.split(' ')[0];
+                    } else {
+                        dateStr = rawFecha;
+                    }
+                    
+                    // Fallback to ensure we have a valid format YYYY-MM-DD
+                    if (!dateStr || dateStr.length < 8) return null;
+
                     let timeStr = fixTime(s.hora);
                     const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
 
