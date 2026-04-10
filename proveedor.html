@@ -215,11 +215,21 @@
         if (!rows || rows.length === 0) return {};
         const first = rows[0];
         const keys = Object.keys(first);
+        
+        // Detección agresiva de OC (Columna O típica)
+        let ocKey = keys.find(k => {
+            const low = k.toLowerCase().trim();
+            return low === 'orden de compra' || low === 'oc' || low === 'nro. oc' || low === 'compra' || low === 'nro de oc';
+        });
+        
+        // Fallback por posición si los nombres son raros (Columna O es la 15, índice 14)
+        if (!ocKey && keys.length >= 15) ocKey = keys[14];
+
         return {
-            oc: keys.find(k => k.toLowerCase().includes('orden de compra')),
+            oc: ocKey,
             prov: keys.find(k => k.toLowerCase().includes('proveedor') && !k.toLowerCase().includes('nombre')),
             art: keys.find(k => k.toLowerCase().includes('art') && k.toLowerCase().includes('culo')),
-            nom: keys.find(k => k.includes('Nombre_1')) || keys.find(k => k.toLowerCase().includes('material')),
+            nom: keys.find(k => k.includes('Nombre_1')) || keys.find(k => k.toLowerCase().includes('material')) || keys.find(k => k.toLowerCase().includes('art')),
             planta: keys.find(k => k.toLowerCase().includes('lugar') || k.toLowerCase().includes('planta')),
             qty: keys.find(k => k.toLowerCase().includes('pendiente')),
             fechaNeed: keys.find(k => k.toLowerCase().includes('fecha entrega'))
@@ -247,20 +257,21 @@
         select.innerHTML = '<option value="">-- Seleccioná una OC --</option>';
 
         if (!cols.oc || !cols.prov) {
-            console.error("Columnas no detectadas automáticamente:", cols);
-            // Fallback manual si fallan los cabezales
+            console.error("Columnas no detectadas:", cols);
             select.innerHTML = '<option value="">Error: No se detectaron las columnas en el Excel</option>';
             return;
         }
 
-        const myProv = String(currentUser.proveedor_id);
+        const myProv = String(currentUser.proveedor_id).trim();
         
         // Filtrar únicas y por proveedor
         const seen = new Set();
         const myOCs = maestro.filter(row => {
-            const rowProv = String(row[cols.prov]).trim();
-            const rowOC = String(row[cols.oc]).trim();
-            // Validamos que coincida el proveedor o si es admin (1000)
+            const rowProv = String(row[cols.prov] || "").trim();
+            const rowOC = String(row[cols.oc] || "").trim();
+            
+            if (rowOC === "" || rowOC.toLowerCase() === "null") return false;
+
             if ((rowProv === myProv || myProv === "1000") && !seen.has(rowOC)) {
                 seen.add(rowOC);
                 return true;
@@ -274,7 +285,8 @@
             myOCs.forEach(opt => {
                 const el = document.createElement('option');
                 el.value = opt[cols.oc];
-                el.innerText = `OC: ${opt[cols.oc]} - ${opt[cols.nom] || 'Sin descripción'}`;
+                // Mostramos el número de OC primero
+                el.innerText = `${opt[cols.oc]} - ${opt[cols.nom] || 'Sin descripción'}`;
                 select.appendChild(el);
             });
         }
@@ -298,7 +310,7 @@
         const cols = getColumns(maestro);
 
         // Buscar todos los renglones que coincidan con esa OC
-        const matches = maestro.filter(row => String(row[cols.oc]).trim() === ocValue.trim());
+        const matches = maestro.filter(row => String(row[cols.oc] || "").trim() === String(ocValue).trim());
 
         if (matches.length === 0) {
             errorDiv.innerText = "Error validando la orden seleccionada.";
