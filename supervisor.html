@@ -13,7 +13,8 @@
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
         h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
-        .fc-event { cursor: pointer; }
+        .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; }
+        .fc-header-toolbar { padding: 1rem; background: white; border-radius: 12px 12px 0 0; margin-bottom: 0 !important; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
@@ -23,32 +24,33 @@
         <span class="text-[#004f89] font-extrabold text-xl tracking-tighter">Biosintex Supervisor</span>
     </div>
     <div class="flex items-center gap-4">
-        <span class="text-sm font-bold text-gray-500">Panel Gerencial</span>
+        <span class="text-sm font-bold text-gray-500" id="user-display">Panel Gerencial</span>
         <a href="#" onclick="logout(); return false;" class="text-red-600 font-medium hover:underline text-sm border px-3 py-1 rounded">Cerrar Sesión</a>
     </div>
 </header>
 
 <main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
     <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex justify-between items-end">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
             <div>
                 <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Calendario de Turnos</h1>
-                <p class="text-gray-500 mt-1">Vista desde Google Sheets</p>
+                <p class="text-gray-500 mt-1">Gestión Centralizada desde Google Sheets</p>
             </div>
-            <div class="flex gap-3 items-center">
-                <select id="plantaFilter" class="p-2 border rounded-md shadow-sm focus:border-[#004f89]">
+            <div class="flex flex-wrap gap-3 items-center">
+                <select id="plantaFilter" class="p-2 border rounded-md shadow-sm focus:border-[#004f89] text-sm font-medium bg-white">
                     <option value="all">Todas las Plantas</option>
                     <option value="Barracas">Planta Barracas</option>
                     <option value="Pibera">Planta Pibera</option>
                 </select>
-                <a href="https://docs.google.com/spreadsheets" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition flex items-center gap-1">
+                <button onclick="calendar.today()" class="bg-white border p-2 rounded-md hover:bg-gray-50 text-sm font-bold">Hoy</button>
+                <a href="https://docs.google.com/spreadsheets" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition flex items-center gap-1 shadow-sm">
                     <span class="material-symbols-outlined text-sm">grid_on</span>
-                    Abrir Excel de Google
+                    Abrir Excel
                 </a>
             </div>
         </header>
 
-        <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
             <div id='calendar'></div>
         </div>
     </div>
@@ -66,17 +68,25 @@
         window.location.href = 'login.html';
     }
 
+    var calendar;
+
     document.addEventListener('DOMContentLoaded', async function() {
         const calendarEl = document.getElementById('calendar');
-        const calendar = new FullCalendar.Calendar(calendarEl, {
+        calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'timeGridWeek',
             locale: 'es',
             slotMinTime: '07:00:00',
-            slotMaxTime: '14:00:00',
+            slotMaxTime: '15:00:00',
             hiddenDays: [0, 6],
             allDaySlot: false,
+            headerToolbar: {
+                left: 'prev,next',
+                center: 'title',
+                right: 'timeGridWeek,dayGridMonth'
+            },
             eventClick: function(info) {
-                alert(`Turno: ${info.event.title}\nProveedor: ${info.event.extendedProps.supplier}`);
+                const p = info.event.extendedProps;
+                alert(`Turno Detallado:\n\nProveedor: ${p.supplier}\nOC: ${p.oc}\nMaterial: ${p.articulo}\nPallets: ${p.pallets}\nPlanta: ${p.planta}\nHora: ${info.event.start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} hs`);
             }
         });
         calendar.render();
@@ -85,26 +95,59 @@
         try {
             const res = await fetch(CONFIG.API_URL + "?action=get_all");
             const db = await res.json();
-            const shifts = db.TURNOS || [];
+            const rows = db.TURNOS || [];
             
-            const events = shifts.map(s => {
-                const color = s.planta === 'Barracas' ? '#004f89' : '#006e2d';
+            // Función para normalizar hora (ej: 7:00 -> 07:00)
+            const fixTime = (t) => {
+                let time = String(t).trim();
+                // Google Sheets a veces manda las horas como "0.333333" o similar si no es texto
+                if (time.includes(':')) {
+                    let [h, m] = time.split(':');
+                    return `${h.padStart(2, '0')}:${m.padStart(2, '0')}`;
+                }
+                return "08:00"; 
+            };
+
+            const events = rows.map((s, idx) => {
+                if (!s.fecha || !s.hora) return null;
+                if (String(s.estado).toLowerCase() === 'cancelado') return null;
+
+                // Normalizar Fecha
+                let d = new Date(s.fecha);
+                let dateStr = isNaN(d.getTime()) ? String(s.fecha).split('T')[0] : d.toISOString().split('T')[0];
+                
+                // Normalizar Hora
+                let timeStr = fixTime(s.hora);
+
+                const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
+
                 return {
-                    id: s.id,
-                    title: `${s.planta} - OC: ${s.oc}`,
-                    start: `${s.fecha}T${s.hora}:00`,
-                    end: `${s.fecha}T${parseInt(s.hora.split(':')[0]) + 1}:00:00`,
+                    id: s.id || idx,
+                    title: `OC: ${s.oc} - ${s.nombre_proveedor || s.ombre_proveed || 'S/N'}`,
+                    start: `${dateStr}T${timeStr}:00`,
+                    end: `${dateStr}T${String(parseInt(timeStr.split(':')[0]) + 1).padStart(2,'0')}:${timeStr.split(':')[1]}:00`,
                     backgroundColor: color,
                     borderColor: color,
                     extendedProps: {
-                        supplier: s.nombre_proveedor,
-                        planta: s.planta
+                        supplier: s.nombre_proveedor || s.ombre_proveed || 'S/D',
+                        planta: s.planta,
+                        oc: s.oc,
+                        articulo: s.articulo,
+                        pallets: s.pallets
                     }
                 };
-            });
+            }).filter(e => e !== null);
+
             calendar.addEventSource(events);
 
-            // Filtro
+            // Saltar al primer turno futuro si existe
+            if (events.length > 0) {
+                // Ordenar por fecha y buscar la más cercana
+                events.sort((a,b) => new Date(a.start) - new Date(b.start));
+                calendar.gotoDate(events[0].start);
+            }
+
+            // Filtro de Planta
             document.getElementById('plantaFilter').onchange = (e) => {
                 const val = e.target.value;
                 calendar.getEvents().forEach(ev => {
@@ -114,7 +157,8 @@
             };
 
         } catch (e) {
-            console.error("Error cargando calendario:", e);
+            console.error("Error cargando eventos:", e);
+            alert("No se pudieron cargar los turnos. Verifica la conexión con Google Sheets.");
         }
     });
 
