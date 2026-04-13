@@ -184,6 +184,34 @@
             </div>
 
         </div>
+
+        <!-- Nueva Sección: Historial de Turnos -->
+        <section class="mt-12 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-gray-800 text-white px-6 py-4 flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span class="material-symbols-outlined">history</span>
+                    Mis Próximas Entregas
+                </h2>
+                <span class="text-xs bg-gray-700 px-3 py-1 rounded-full text-gray-300">Solo turnos futuros</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-gray-50 text-gray-500 text-[10px] font-bold uppercase tracking-widest border-b">
+                            <th class="px-6 py-4">Fecha</th>
+                            <th class="px-6 py-4">Hora</th>
+                            <th class="px-6 py-4">Planta</th>
+                            <th class="px-6 py-4">OC</th>
+                            <th class="px-6 py-4">Pallets</th>
+                            <th class="px-6 py-4">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history_body" class="divide-y divide-gray-100 italic text-gray-400">
+                        <tr><td colspan="6" class="px-6 py-8 text-center text-sm">Cargando historial...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
     </div>
 </main>
 
@@ -258,13 +286,17 @@
             db = await res.json();
             console.log("DB Cargada:", db);
 
-            // Cargar Bloqueos
             const bKey = Object.keys(db).find(k => k.toLowerCase() === 'bloqueos');
             if (bKey) {
-                blockedDates = db[bKey].map(b => String(b.fecha).split('T')[0]);
+                // Normalizar fechas de bloqueo a YYYY-MM-DD
+                blockedDates = db[bKey].map(b => {
+                    let d = new Date(b.fecha);
+                    return isNaN(d.getTime()) ? String(b.fecha).split('T')[0] : d.toISOString().split('T')[0];
+                });
                 console.log("Días bloqueados:", blockedDates);
             }
 
+            renderHistory();
             populateOCDropdown();
         } catch (e) {
             console.error(e);
@@ -272,6 +304,39 @@
         }
     }
     loadData();
+
+    function renderHistory() {
+        const historyBody = document.getElementById('history_body');
+        const myShifts = (db.TURNOS || []).filter(s => 
+            String(s.proveedor_id).trim() === String(currentUser.proveedor_id).trim() && 
+            String(s.estado).trim() !== 'Cancelado'
+        ).sort((a,b) => new Date(a.fecha) - new Date(b.fecha));
+
+        const today = new Date().toISOString().split('T')[0];
+        const upcoming = myShifts.filter(s => {
+            let sDate = new Date(s.fecha);
+            let sDateStr = isNaN(sDate) ? String(s.fecha).split('T')[0] : sDate.toISOString().split('T')[0];
+            return sDateStr >= today;
+        });
+
+        if (upcoming.length === 0) {
+            historyBody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500">No tienes turnos programados próximamente.</td></tr>';
+            return;
+        }
+
+        historyBody.innerHTML = upcoming.map(s => `
+            <tr class="hover:bg-blue-50/50 transition text-sm text-gray-700 not-italic font-medium">
+                <td class="px-6 py-4 font-bold text-[#004f89]">${s.fecha}</td>
+                <td class="px-6 py-4">${s.hora} hs</td>
+                <td class="px-6 py-4">${s.planta}</td>
+                <td class="px-6 py-4 text-xs font-mono">${s.oc}</td>
+                <td class="px-6 py-4 font-bold text-gray-900">${s.pallets}</td>
+                <td class="px-6 py-4">
+                    <span class="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Confirmado</span>
+                </td>
+            </tr>
+        `).join('');
+    }
 
     async function saveProfile() {
         const btn = document.getElementById('btn_save_prof');
@@ -480,10 +545,10 @@
         // Calcular TODAS las horas ya ocupadas en esa planta/fecha
         const bookedTimes = new Set();
         (db.TURNOS || []).forEach(s => {
-            const sDate = new Date(s.fecha);
-            const sDateStr = !isNaN(sDate) ? sDate.toISOString().split('T')[0] : String(s.fecha);
+            let sDate = new Date(s.fecha);
+            let sDateStr = !isNaN(sDate) ? sDate.toISOString().split('T')[0] : String(s.fecha).trim();
             
-            if (sDateStr === selectedDateStr && s.planta === currentOC.planta && s.estado === 'Confirmado') {
+            if (sDateStr === selectedDateStr && s.planta === currentOC.planta && String(s.estado).toLowerCase().trim() === 'confirmado') {
                 const startIdx = allSlots.indexOf(s.hora);
                 if (startIdx !== -1) {
                     const blocks = Math.ceil((parseInt(s.pallets) || 1) / 5);
@@ -498,12 +563,12 @@
 
         const available = [];
         for (let i = 0; i < allSlots.length; i++) {
-            // Un turno no puede empezar a las 12:00 si necesita más de 1 bloque
-            if (requiredBlocks > 1 && i + requiredBlocks > allSlots.length) continue; 
+            // Un turno no puede empezar si necesita más bloques de los que quedan
+            if (i + requiredBlocks > allSlots.length) continue; 
             
             let canFit = true;
             for (let j = 0; j < requiredBlocks; j++) {
-                if (i + j >= allSlots.length || bookedTimes.has(allSlots[i+j])) {
+                if (bookedTimes.has(allSlots[i+j])) {
                     canFit = false; break;
                 }
             }

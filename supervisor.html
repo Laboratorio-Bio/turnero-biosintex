@@ -31,22 +31,20 @@
 
 <main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
     <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+        <header class="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
             <div>
-                <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Calendario de Turnos</h1>
-                <p class="text-gray-500 mt-1">Gestión Centralizada desde Google Sheets</p>
+                <h1 class="text-4xl font-extrabold text-[#0b1c30] tracking-tight">Panel de <span class="text-[#004f89]">Supervisor</span></h1>
+                <p class="text-gray-500 mt-2 font-medium">Control total de logística y recepciones</p>
             </div>
-            <div class="flex flex-wrap gap-3 items-center">
-                <select id="plantaFilter" class="p-2 border rounded-md shadow-sm focus:border-[#004f89] text-sm font-medium bg-white">
-                    <option value="all">Todas las Plantas</option>
-                    <option value="Barracas">Planta Barracas</option>
-                    <option value="Pibera">Planta Pibera</option>
-                </select>
-                <button onclick="calendar.today()" class="bg-white border p-2 rounded-md hover:bg-gray-50 text-sm font-bold">Hoy</button>
-                <a href="https://docs.google.com/spreadsheets" target="_blank" class="bg-green-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-green-700 transition flex items-center gap-1 shadow-sm">
-                    <span class="material-symbols-outlined text-sm">grid_on</span>
-                    Abrir Excel
-                </a>
+            <div class="flex gap-3">
+                <button onclick="openBlockModal()" class="bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-amber-700 transition flex items-center gap-2 shadow-sm">
+                    <span class="material-symbols-outlined">block</span>
+                    Bloquear Jornada
+                </button>
+                <div class="bg-gray-100 p-2.5 rounded-xl flex items-center gap-3 border border-gray-200">
+                    <span class="text-sm font-bold text-gray-700" id="user-display">Supervisor</span>
+                    <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-xs bg-white px-3 py-1.5 rounded-lg shadow-sm border border-gray-100">Cerrar Sesión</a>
+                </div>
             </div>
         </header>
 
@@ -72,6 +70,35 @@
                 <span class="material-symbols-outlined text-sm">cancel</span>
                 Cancelar Turno
             </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Bloquear Día -->
+<div id="blockModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div class="bg-amber-600 p-6 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold">Bloquear Fecha</h3>
+            <button onclick="closeBlockModal()" class="hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-6 space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase">Fecha a bloquear</label>
+                <input type="date" id="blockDate" class="w-full mt-1 border-gray-300 rounded-lg">
+            </div>
+            <div>
+                <label class="block text-xs font-bold text-gray-500 uppercase">Motivo (Interno)</label>
+                <select id="blockReason" class="w-full mt-1 border-gray-300 rounded-lg">
+                    <option value="Inventario">Inventario</option>
+                    <option value="Cierre de Mes">Cierre de Mes</option>
+                    <option value="Feriado Interno">Feriado Interno</option>
+                    <option value="Obras/Mantenimiento">Obras/Mantenimiento</option>
+                </select>
+            </div>
+        </div>
+        <div class="bg-gray-50 p-4 border-t flex justify-end gap-3">
+            <button onclick="closeBlockModal()" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">Cerrar</button>
+            <button id="btnSaveBlock" class="px-4 py-2 bg-amber-600 text-white font-bold rounded-lg hover:bg-amber-700 transition">Confirmar Bloqueo</button>
         </div>
     </div>
 </div>
@@ -112,6 +139,30 @@
 
         window.closeModal = () => {
             document.getElementById('eventModal').classList.add('hidden');
+        };
+
+        window.openBlockModal = () => document.getElementById('blockModal').classList.remove('hidden');
+        window.closeBlockModal = () => document.getElementById('blockModal').classList.add('hidden');
+
+        document.getElementById('btnSaveBlock').onclick = async () => {
+            const date = document.getElementById('blockDate').value;
+            const motive = document.getElementById('blockReason').value;
+            if(!date) return alert("Seleccione una fecha");
+            
+            const btn = document.getElementById('btnSaveBlock');
+            btn.innerText = "Guardando..."; btn.disabled = true;
+
+            try {
+                const res = await fetch(CONFIG.API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: 'block_day', fecha: date, motivo: motive })
+                });
+                if((await res.json()).success) {
+                    alert("Fecha bloqueada exitosamente");
+                    closeBlockModal();
+                }
+            } catch(e) { alert("Error: " + e.message); }
+            finally { btn.innerText = "Confirmar Bloqueo"; btn.disabled = false; }
         };
 
         window.showEventDetails = (event) => {
@@ -251,10 +302,15 @@
                     let timeStr = fixTime(s.hora);
                     console.log(`Fila ${idx} hora parseada:`, timeStr);
 
-                    const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
+                    const pCount = parseInt(s.pallets) || 1;
+                    const endHours = Math.ceil(pCount / 5);
 
                     let startStr = `${dateStr}T${timeStr}:00`;
-                    let endStr = `${dateStr}T${String(parseInt(timeStr.split(':')[0]) + 1).padStart(2,'0')}:${timeStr.split(':')[1]}:00`;
+                    
+                    // Calcular fin del turno visualmente (1h por cada 5 pallets)
+                    let endDate = new Date(startStr);
+                    endDate.setHours(endDate.getHours() + endHours);
+                    let endStr = endDate.toISOString().split('.')[0]; 
 
                     console.log(`Fila ${idx} start=${startStr}, end=${endStr}`);
 
@@ -269,13 +325,13 @@
                         start: startStr,
                         end: endStr,
                         backgroundColor: color,
-                        borderColor: color,
+                        borderColor: 'transparent',
                         extendedProps: {
                             supplier: s.nombre_proveedor || 'S/D',
                             planta: s.planta,
                             oc: s.oc,
                             articulo: s.articulo,
-                            pallets: s.pallets
+                            pallets: pCount
                         }
                     };
                 }).filter(e => e !== null);
