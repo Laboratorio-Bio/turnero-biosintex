@@ -162,19 +162,41 @@
         async function processData(data) {
             if (!data || data.length === 0) return alert("El archivo está vacío.");
             
-            // Validar columnas
-            const headers = Object.keys(data[0]);
+            // Normalizar encabezados para que no fallen por tildes o espacios
+            const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            const rawHeaders = Object.keys(data[0]);
+            const foundHeaders = rawHeaders.map(h => normalize(h));
+            
+            console.log("Encabezados detectados en el archivo:", rawHeaders);
+
             const required = ["OC", "Artículo", "Planta", "Pendiente"];
-            const missing = required.filter(h => !headers.includes(h));
+            const normalizedRequired = required.map(h => normalize(h));
+
+            const missing = [];
+            normalizedRequired.forEach((req, idx) => {
+                if (!foundHeaders.includes(req)) missing.push(required[idx]);
+            });
             
             if(missing.length > 0) {
-                return alert("El archivo debe tener los encabezados exactos: " + required.join(", "));
+                console.error("Faltan columnas:", missing);
+                return alert("No se encontraron las columnas: " + missing.join(", ") + ".\n\nAsegurate de que el Excel las tenga en la primera fila.");
             }
+
+            // Si llegamos acá, mapeamos los datos originales a los nombres que espera Google
+            const finalData = data.map(item => {
+                const newItem = {};
+                rawHeaders.forEach(rh => {
+                    const norm = normalize(rh);
+                    const reqIdx = normalizedRequired.indexOf(norm);
+                    if (reqIdx !== -1) newItem[required[reqIdx]] = item[rh];
+                });
+                return newItem;
+            });
 
             try {
                 const res = await fetch(CONFIG.API_URL, {
                     method: 'POST',
-                    body: JSON.stringify({ action: 'update_maestro', data: data })
+                    body: JSON.stringify({ action: 'update_maestro', data: finalData })
                 });
                 const r = await res.json();
                 if(r.success) {
