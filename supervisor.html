@@ -325,12 +325,12 @@
                     const endHours = Math.ceil(pCount / 5);
                     const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
 
-                    let startStr = `${dateStr}T${timeStr}:00`;
-                    
-                    // Calcular fin del turno visualmente (1h por cada 5 pallets)
+                    // Calcular fin del turno en hora LOCAL para evitar desfase de zona horaria
                     let endDate = new Date(startStr);
                     endDate.setHours(endDate.getHours() + endHours);
-                    let endStr = endDate.toISOString().split('.')[0]; 
+                    
+                    const pad = (n) => String(n).padStart(2, '0');
+                    let endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
 
                     console.log(`Fila ${idx} start=${startStr}, end=${endStr}`);
 
