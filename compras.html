@@ -1,0 +1,202 @@
+
+<!DOCTYPE html>
+<html class="light" lang="es">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Biosintex | Compras y Planificación</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <script src="config.js"></script>
+    <style>
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
+        .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; }
+    </style>
+</head>
+<body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
+
+<header class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 h-16 shadow-sm border-b">
+    <div class="flex items-center gap-2">
+        <span class="text-[#004f89] font-extrabold text-xl tracking-tighter">Biosintex Planificación</span>
+    </div>
+    <div class="flex items-center gap-4">
+        <span class="text-sm font-bold text-gray-500" id="user-display">Sector Compras</span>
+        <a href="#" onclick="logout(); return false;" class="text-red-600 font-medium hover:underline text-sm border px-3 py-1 rounded">Cerrar Sesión</a>
+    </div>
+</header>
+
+<main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div>
+                <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Panel de <span class="text-[#004f89]">Compras</span></h1>
+                <p class="text-gray-500 mt-1">Visibilidad de turnos y actualización de OC</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <input type="file" id="csvFile" accept=".csv" class="hidden">
+                <button onclick="document.getElementById('csvFile').click()" class="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
+                    <span class="material-symbols-outlined semi-bold">upload_file</span>
+                    Actualizar Maestro OC (CSV)
+                </button>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 gap-6">
+            <!-- CALENDARIO -->
+            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+                    <h2 class="font-bold text-gray-700">Estado de Recepción</h2>
+                    <select id="plantaFilter" class="p-1.5 border rounded-lg text-xs font-bold">
+                        <option value="all">Todas las Plantas</option>
+                        <option value="Barracas">Barracas</option>
+                        <option value="Pibera">Pibera</option>
+                    </select>
+                </div>
+                <div id='calendar'></div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<!-- Modal de Detalles (Solo Lectura) -->
+<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center">
+            <h3 class="text-xl font-bold">Detalle del Turno</h3>
+            <button onclick="closeModal()" class="hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
+        </div>
+        <div class="p-6 space-y-4" id="modalContent"></div>
+        <div class="bg-gray-50 p-4 border-t flex justify-end">
+            <button onclick="closeModal()" class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Cerrar</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const sessionStr = localStorage.getItem('biosintex_session');
+    if (!sessionStr) window.location.href = 'login.html';
+    const currentUser = JSON.parse(sessionStr);
+
+    function logout() {
+        localStorage.removeItem('biosintex_session');
+        window.location.href = 'login.html';
+    }
+
+    var calendar;
+    var globalDB = {};
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'timeGridWeek',
+            locale: 'es',
+            slotMinTime: '07:00:00',
+            slotMaxTime: '14:00:00',
+            hiddenDays: [0, 6],
+            allDaySlot: false,
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
+            eventClick: (info) => showEventDetails(info.event)
+        });
+        calendar.render();
+
+        window.closeModal = () => document.getElementById('eventModal').classList.add('hidden');
+
+        window.showEventDetails = (event) => {
+            const p = event.extendedProps;
+            const start = event.start;
+            const supplierData = (globalDB.USUARIOS || []).find(u => String(u.proveedor_id).trim() === String(p.supplier_id).trim());
+            
+            document.getElementById('modalContent').innerHTML = `
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="col-span-2 bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Contacto del Proveedor</p>
+                        <p class="font-semibold text-sm">📧 ${supplierData?.email || 'No cargado'}</p>
+                        <p class="font-semibold text-sm">📞 ${supplierData?.telefono || 'No cargado'}</p>
+                    </div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Proveedor</p><p class="font-semibold">${p.supplier}</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Planta</p><p class="font-semibold">${p.planta}</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">OC</p><p class="font-bold text-[#004f89]">${p.oc}</p></div>
+                    <div><p class="text-xs text-gray-500 font-bold uppercase">Pallets</p><p class="font-bold">${p.pallets}</p></div>
+                    <div class="col-span-2"><p class="text-xs text-gray-500 font-bold uppercase">Material</p><p class="text-sm">${p.articulo}</p></div>
+                </div>`;
+            document.getElementById('eventModal').classList.remove('hidden');
+        };
+
+        // CARGA DE CSV
+        document.getElementById('csvFile').onchange = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if(!confirm("¿Estás seguro de que deseas sobrescribir el Maestro de OC?\nEsto reemplazará todos los artículos y pedidos pendientes actuales.")) return;
+
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                complete: async function(results) {
+                    console.log("CSV parsed:", results.data);
+                    // Validar columnas mínimas
+                    const headers = results.meta.fields;
+                    const required = ["OC", "Artículo", "Planta", "Pendiente"];
+                    const missing = required.filter(h => !headers.includes(h));
+                    
+                    if(missing.length > 0) {
+                        return alert("El archivo CSV debe tener los encabezados exactos: " + required.join(", "));
+                    }
+
+                    try {
+                        const res = await fetch(CONFIG.API_URL, {
+                            method: 'POST',
+                            body: JSON.stringify({ action: 'update_maestro', data: results.data })
+                        });
+                        const r = await res.json();
+                        if(r.success) {
+                            alert("¡Éxito! Se actualizaron " + r.count + " registros de OC.");
+                            location.reload();
+                        } else throw new Error(r.error);
+                    } catch(err) { alert("Error al subir: " + err.message); }
+                }
+            });
+        };
+
+        async function loadData() {
+            const res = await fetch(CONFIG.API_URL + "?action=get_all");
+            globalDB = await res.json();
+            
+            const rows = globalDB.TURNOS || [];
+            const events = rows.filter(s => String(s.estado).toLowerCase().trim() !== 'cancelado').map(s => {
+                const pCount = parseInt(s.pallets) || 1;
+                const endHours = Math.ceil(pCount / 5);
+                const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
+                const startStr = `${s.fecha}T${s.hora}:00`;
+                let endDate = new Date(startStr);
+                endDate.setHours(endDate.getHours() + endHours);
+                const pad = (n) => String(n).padStart(2,'0');
+                const endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
+
+                return {
+                    id: s.id,
+                    title: `OC: ${s.oc} (${pCount}p)`,
+                    start: startStr,
+                    end: endStr,
+                    backgroundColor: color,
+                    borderColor: 'transparent',
+                    extendedProps: { supplier: s.nombre_proveedor, supplier_id: s.proveedor_id, planta: s.planta, oc: s.oc, articulo: s.articulo, pallets: pCount }
+                };
+            });
+            calendar.addEventSource(events);
+            
+            document.getElementById('plantaFilter').onchange = (e) => {
+                calendar.getEvents().forEach(ev => {
+                    ev.setProp('display', (e.target.value === 'all' || ev.extendedProps.planta === e.target.value) ? 'auto' : 'none');
+                });
+            };
+        }
+        loadData();
+    });
+</script>
+</body>
+</html>

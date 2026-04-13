@@ -68,6 +68,8 @@
                 
                 if (data.rol === 'supervisor') {
                     window.location.href = 'supervisor.html';
+                } else if (data.rol === 'compras' || data.rol === 'planificacion') {
+                    window.location.href = 'compras.html';
                 } else {
                     window.location.href = 'proveedor.html';
                 }
