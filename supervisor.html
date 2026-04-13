@@ -14,6 +14,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
         h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
         .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; }
+        .tab-btn { border-bottom: 3px solid transparent; }
         .tab-btn.active { border-bottom: 3px solid #004f89; color: #004f89; }
     </style>
 </head>
@@ -25,7 +26,7 @@
     </div>
     <div class="flex items-center gap-4">
         <span class="text-xs font-bold text-gray-400 uppercase tracking-widest" id="top-user-display">Panel General</span>
-        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-sm border px-3 py-1.5 rounded-lg bg-red-50 border-red-100">Cerrar Sesión</a>
+        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-sm border px-3 py-1.5 rounded-lg bg-red-50 border-red-100 transition">Cerrar Sesión</a>
     </div>
 </header>
 
@@ -36,50 +37,50 @@
                 <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Gestión <span class="text-[#004f89]">Logística</span></h1>
                 <p class="text-gray-500 mt-1">Control de turnos, bloqueos y proveedores</p>
             </div>
-            <div class="flex gap-3">
-                <button onclick="switchTab('calendar-view')" id="btn-tab-cal" class="tab-btn active px-4 py-2 font-bold text-gray-500 transition">Calendario</button>
-                <button onclick="switchTab('users-view')" id="btn-tab-users" class="tab-btn px-4 py-2 font-bold text-gray-500 transition">Proveedores</button>
+            <div class="flex gap-3 h-12">
+                <button onclick="switchTab('calendar-view')" id="btn-tab-cal" class="tab-btn active px-6 py-2 font-black text-sm uppercase tracking-tighter transition">Calendario</button>
+                <button onclick="switchTab('users-view')" id="btn-tab-users" class="tab-btn px-6 py-2 font-black text-sm uppercase tracking-tighter transition">Proveedores</button>
             </div>
         </header>
 
         <!-- VISTA CALENDARIO -->
-        <div id="calendar-view" class="space-y-6">
+        <div id="calendar-view" class="space-y-6 animate-in fade-in duration-300">
             <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                 <div class="flex gap-4">
-                    <select id="plantaFilter" class="p-2 border rounded-lg text-xs font-bold bg-gray-50">
+                    <select id="plantaFilter" class="p-2 border rounded-lg text-xs font-bold bg-gray-50 border-gray-200">
                         <option value="all">Todas las Plantas</option>
                         <option value="Barracas">Barracas</option>
                         <option value="Pibera">Pibera</option>
                     </select>
                 </div>
-                <button onclick="openBlockModal()" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-amber-700 transition flex items-center gap-2 text-sm shadow-sm">
+                <button onclick="openBlockModal()" class="bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-amber-700 transition flex items-center gap-2 text-sm shadow-md">
                     <span class="material-symbols-outlined text-sm">block</span> Bloquear Jornada
                 </button>
             </div>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
                 <div id='calendar'></div>
             </div>
         </div>
 
         <!-- VISTA PROVEEDORES -->
-        <div id="users-view" class="hidden space-y-6">
+        <div id="users-view" class="hidden space-y-6 animate-in slide-in-from-right-10 duration-300">
             <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-700">Listado de Usuarios</h2>
-                <button onclick="openUserModal()" class="bg-[#004f89] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-900 transition flex items-center gap-2 shadow-sm">
+                <h2 class="text-2xl font-black text-gray-800 tracking-tight">Listado de Proveedores</h2>
+                <button onclick="openUserModal()" class="bg-[#004f89] text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-900 transition flex items-center gap-2 shadow-lg">
                     <span class="material-symbols-outlined">person_add</span> Nuevo Proveedor
                 </button>
             </div>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
                 <table class="w-full text-left">
                     <thead class="bg-gray-50 border-b text-[10px] uppercase font-black text-gray-400">
                         <tr>
-                            <th class="px-6 py-4">ID / Nombre</th>
-                            <th class="px-6 py-4">Usuario</th>
-                            <th class="px-6 py-4">Contraseña</th>
-                            <th class="px-6 py-4 text-center">Acciones</th>
+                            <th class="px-8 py-5">Proveedor / ID</th>
+                            <th class="px-8 py-5">Login / Usuario</th>
+                            <th class="px-8 py-5">Contraseña Actual</th>
+                            <th class="px-8 py-5 text-center">Acciones</th>
                         </tr>
                     </thead>
-                    <tbody id="user-list-body" class="divide-y divide-gray-100">
+                    <tbody id="user-list-body" class="divide-y divide-gray-50">
                         <!-- Cargado por JS -->
                     </tbody>
                 </table>
@@ -88,54 +89,59 @@
     </div>
 </main>
 
-<!-- MODALES (NUEVO USUARIO, BLOQUEO, DETALLES) -->
-<!-- Modal Nuevo Usuario -->
-<div id="userModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
+<!-- MODAL NUEVO USUARIO -->
+<div id="userModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
         <div class="bg-[#004f89] p-6 text-white flex justify-between items-center">
-            <h3 class="text-xl font-bold">Alta de Proveedor</h3>
-            <button onclick="closeUserModal()" class="hover:bg-white/20 rounded p-1"><span class="material-symbols-outlined">close</span></button>
+            <h3 class="text-xl font-bold">Nuevo Proveedor</h3>
+            <button onclick="closeUserModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <div class="p-6 space-y-4">
-            <div><label class="text-xs font-bold text-gray-500 uppercase">Nombre Empresa</label><input type="text" id="newNombre" class="w-full mt-1 border-gray-300 rounded-lg"></div>
-            <div><label class="text-xs font-bold text-gray-500 uppercase">ID Proveedor</label><input type="text" id="newProvId" class="w-full mt-1 border-gray-300 rounded-lg"></div>
-            <div><label class="text-xs font-bold text-gray-500 uppercase">Username (Login)</label><input type="text" id="newUser" class="w-full mt-1 border-gray-300 rounded-lg"></div>
+        <div class="p-8 space-y-5">
+            <div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Nombre Fantasía</label><input type="text" id="newNombre" class="w-full mt-1 border-gray-200 rounded-xl bg-gray-50 p-3 text-sm focus:ring-[#004f89]"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">ID Proveedor (Numérico)</label><input type="text" id="newProvId" class="w-full mt-1 border-gray-200 rounded-xl bg-gray-50 p-3 text-sm"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Usuario de Acceso</label><input type="text" id="newUser" class="w-full mt-1 border-gray-200 rounded-xl bg-gray-50 p-3 text-sm"></div>
             <div>
-                <label class="text-xs font-bold text-gray-500 uppercase">Contraseña</label>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Contraseña Aleatoria</label>
                 <div class="flex gap-2 mt-1">
-                    <input type="text" id="newPass" class="flex-1 border-gray-300 rounded-lg font-mono">
-                    <button onclick="generatePass('newPass')" class="bg-gray-200 p-2 rounded-lg hover:bg-gray-300"><span class="material-symbols-outlined">autorenew</span></button>
+                    <input type="text" id="newPass" class="flex-1 border-gray-200 rounded-xl bg-gray-50 p-3 font-mono text-sm tracking-wider">
+                    <button onclick="generatePass('newPass')" class="bg-[#004f89]/10 text-[#004f89] p-3 rounded-xl hover:bg-[#004f89]/20 transition"><span class="material-symbols-outlined">autorenew</span></button>
                 </div>
             </div>
         </div>
-        <div class="bg-gray-50 p-4 border-t flex justify-end gap-3">
-            <button onclick="closeUserModal()" class="px-4 py-2 text-gray-600 font-bold hover:bg-gray-100 rounded-lg transition">Cerrar</button>
-            <button id="btnSaveUser" class="px-4 py-2 bg-[#004f89] text-white font-bold rounded-lg hover:bg-blue-900 transition">Crear Usuario</button>
+        <div class="bg-gray-50 p-6 border-t flex gap-3">
+            <button onclick="closeUserModal()" class="flex-1 px-4 py-3 text-gray-500 font-bold hover:bg-gray-200 rounded-xl transition">Cancelar</button>
+            <button id="btnSaveUser" class="flex-1 px-4 py-3 bg-[#004f89] text-white font-bold rounded-xl shadow-lg">Crear Usuario</button>
         </div>
     </div>
 </div>
 
-<!-- Modal Bloquear Día -->
-<div id="blockModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+<!-- MODAL BLOQUEO DÍA -->
+<div id="blockModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
         <div class="bg-amber-600 p-6 text-white flex justify-between items-center">
             <h3 class="text-xl font-bold">Bloquear Fecha</h3>
-            <button onclick="closeBlockModal()" class="hover:bg-white/20 rounded p-1"><span class="material-symbols-outlined">close</span></button>
+            <button onclick="closeBlockModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <div class="p-6 space-y-4 text-sm">
-            <div><label class="block font-bold text-gray-500 uppercase text-[10px]">Fecha</label><input type="date" id="blockDate" class="w-full mt-1 border-gray-300 rounded-lg"></div>
-            <div><label class="block font-bold text-gray-500 uppercase text-[10px]">Motivo</label><select id="blockReason" class="w-full mt-1 border-gray-300 rounded-lg"><option value="Inventario">Inventario</option><option value="Cierre de Mes">Cierre de Mes</option><option value="Feriado Interno">Feriado Interno</option></select></div>
+        <div class="p-8 space-y-5">
+            <div><label class="block font-black text-gray-400 uppercase text-[10px] mb-1">Fecha de la Jornada</label><input type="date" id="blockDate" class="w-full border-gray-200 rounded-xl bg-gray-50 p-3"></div>
+            <div><label class="block font-black text-gray-400 uppercase text-[10px] mb-1">Motivo Interno</label><select id="blockReason" class="w-full border-gray-200 rounded-xl bg-gray-50 p-3 text-sm font-bold"><option value="Inventario">Inventario</option><option value="Cierre de Mes">Cierre de Mes</option><option value="Feriado Interno">Feriado Interno</option></select></div>
         </div>
-        <div class="bg-gray-50 p-4 border-t flex justify-end gap-3"><button onclick="closeBlockModal()" class="px-4 py-2 text-gray-600 font-bold rounded-lg hover:bg-gray-100">Cerrar</button><button id="btnSaveBlock" class="px-4 py-2 bg-amber-600 text-white font-bold rounded-lg">Confirmar</button></div>
+        <div class="bg-gray-50 p-6 border-t flex gap-3">
+            <button onclick="closeBlockModal()" class="flex-1 px-4 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-200">Cerrar</button>
+            <button id="btnSaveBlock" class="flex-1 px-4 py-3 bg-amber-600 text-white font-bold rounded-xl shadow-lg">Confirmar</button>
+        </div>
     </div>
 </div>
 
-<!-- Modal Detalles del Turno -->
-<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center"><h3 class="text-xl font-bold">Detalles</h3><button onclick="closeModal()" class="hover:bg-white/20 rounded p-1"><span class="material-symbols-outlined">close</span></button></div>
-        <div class="p-6 space-y-4" id="modalContent"></div>
-        <div class="bg-gray-50 p-4 border-t flex justify-end gap-3"><button onclick="closeModal()" class="px-4 py-2 text-gray-600 font-bold rounded-lg hover:bg-gray-100 transition">Cerrar</button><button id="btnCancelarTurno" class="px-4 py-2 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700">Cancelar Turno</button></div>
+<!-- MODAL DETALLES DEL TURNO -->
+<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-200">
+        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center"><h3 class="text-xl font-bold">Detalle del Turno</h3><button onclick="closeModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button></div>
+        <div class="p-8 space-y-6" id="modalContent"></div>
+        <div class="bg-gray-50 p-6 border-t flex gap-3">
+            <button onclick="closeModal()" class="flex-1 px-4 py-3 text-gray-500 font-bold rounded-xl hover:bg-gray-200">Cerrar</button>
+            <button id="btnCancelarTurno" class="flex-1 px-4 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg border-b-4 border-red-800 active:border-b-0 active:translate-y-1 transition-all">Cancelar Turno</button>
+        </div>
     </div>
 </div>
 
@@ -185,20 +191,20 @@
             const body = document.getElementById('user-list-body');
             const users = (globalDB.USUARIOS || []).filter(u => u.rol !== 'supervisor');
             body.innerHTML = users.map(u => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4">
-                        <p class="font-bold text-gray-800">${u.nombre}</p>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase">ID: ${u.proveedor_id}</p>
+                <tr class="hover:bg-blue-50/30 transition-colors">
+                    <td class="px-8 py-5">
+                        <p class="font-black text-gray-800">${u.nombre}</p>
+                        <p class="text-[9px] text-[#004f89] font-black uppercase tracking-widest mt-0.5">ID: ${u.proveedor_id}</p>
                     </td>
-                    <td class="px-6 py-4 font-mono text-xs text-gray-600">${u.username}</td>
-                    <td class="px-6 py-4">
-                        <div class="flex items-center gap-2">
-                            <input type="text" value="${u.password}" readonly class="text-xs bg-gray-50 border-none p-1 font-mono w-24">
-                            <button onclick="resetPassword('${u.username}')" class="text-blue-600 hover:scale-110 transition bg-blue-50 p-1 rounded"><span class="material-symbols-outlined text-sm">autorenew</span></button>
+                    <td class="px-8 py-5 font-mono text-xs text-gray-500">${u.username}</td>
+                    <td class="px-8 py-5">
+                        <div class="flex items-center gap-3">
+                            <input type="text" value="${u.password}" readonly class="text-xs bg-gray-100 border-none px-3 py-1.5 font-mono rounded-lg outline-none w-28">
+                            <button onclick="resetPassword('${u.username}')" class="text-[#004f89] hover:rotate-180 transition-all duration-500 bg-blue-100/50 p-2 rounded-xl"><span class="material-symbols-outlined text-sm">autorenew</span></button>
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-center">
-                        <button onclick="alert('Email: ${u.email || '-'}\\nTel: ${u.telefono || '-'}')" class="text-gray-400 hover:text-[#004f89]"><span class="material-symbols-outlined">info</span></button>
+                    <td class="px-8 py-5 text-center">
+                        <button onclick="alert('Email: ${u.email || '-'}\\nWhatsApp: ${u.telefono || '-'}')" class="text-gray-300 hover:text-[#004f89] transition-colors"><span class="material-symbols-outlined">contact_support</span></button>
                     </td>
                 </tr>
             `).join('');
@@ -206,43 +212,70 @@
 
         window.resetPassword = async (username) => {
             const newPass = generatePass();
-            if(!confirm(`¿Desea asignar una nueva clave aleatoria (${newPass}) a ${username}?`)) return;
+            if(!confirm(`¿Reseteamos la clave de ${username}? La nueva será: ${newPass}`)) return;
             try {
                 const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_user_password', username: username, newPassword: newPass }) });
-                if((await res.json()).success) { alert("¡Clave actualizada!"); loadData(); setTimeout(renderUserList, 500); }
-            } catch(e) { alert(e.message); }
+                if((await res.json()).success) { alert("¡Guardado en Excel!"); await loadData(); renderUserList(); }
+            } catch(e) { alert("Error: " + e.message); }
+        };
+
+        // EVENTO PARA BLOQUEAR DÍA
+        document.getElementById('btnSaveBlock').onclick = async () => {
+            const dateVal = document.getElementById('blockDate').value;
+            const motiveVal = document.getElementById('blockReason').value;
+            if(!dateVal) return alert("Elegí una fecha para bloquear.");
+            
+            const btn = document.getElementById('btnSaveBlock');
+            btn.disabled = true; btn.innerText = "Bloqueando...";
+
+            try {
+                const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'block_day', fecha: dateVal, motivo: motiveVal }) });
+                const r = await res.json();
+                if(r.success) {
+                    alert("¡Día bloqueado correctamente!");
+                    location.reload();
+                } else throw new Error(r.error);
+            } catch(e) { alert("Error: " + e.message); }
+            finally { btn.disabled = false; btn.innerText = "Confirmar"; }
         };
 
         document.getElementById('btnSaveUser').onclick = async () => {
             const data = { action:'add_user', nombre:document.getElementById('newNombre').value, proveedor_id:document.getElementById('newProvId').value, username:document.getElementById('newUser').value, password:document.getElementById('newPass').value };
-            if(!data.username || !data.password) return alert("Faltan datos.");
+            if(!data.username || !data.password || !data.proveedor_id) return alert("Faltan datos obligatorios.");
             try {
                 const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify(data) });
-                if((await res.json()).success) { alert("¡Creado!"); location.reload(); }
-            } catch(e) { alert(e.message); }
+                if((await res.json()).success) { alert("¡Proveedor creado!"); location.reload(); }
+            } catch(e) { alert("Error de red."); }
         };
 
         window.showEventDetails = (event) => {
             const p = event.extendedProps; const start = event.start;
             const supplierData = (globalDB.USUARIOS || []).find(u => String(u.proveedor_id).trim() === String(p.supplier_id).trim());
             document.getElementById('modalContent').innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 bg-blue-50 p-3 rounded-lg border border-blue-100">
-                        <p class="text-[10px] text-blue-600 font-black uppercase mb-1">Contacto</p>
-                        <p class="text-sm font-bold">📧 ${supplierData?.email || '-'}</p>
-                        <p class="text-sm font-bold">📞 ${supplierData?.telefono || '-'}</p>
+                <div class="grid grid-cols-2 gap-5">
+                    <div class="col-span-2 bg-blue-50/50 p-4 rounded-2xl border border-blue-100 flex items-center gap-4">
+                        <div class="bg-blue-100 p-2 rounded-full text-[#004f89]"><span class="material-symbols-outlined">support_agent</span></div>
+                        <div>
+                            <p class="text-[9px] text-blue-600 font-black uppercase tracking-tighter">Contacto Directo</p>
+                            <p class="text-sm font-bold text-blue-900">${supplierData?.email || '-'}</p>
+                            <p class="text-sm font-bold text-blue-900">${supplierData?.telefono || '-'}</p>
+                        </div>
                     </div>
-                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Proveedor</p><p class="font-bold text-sm">${p.supplier}</p></div>
-                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Planta</p><p class="font-bold text-sm">${p.planta}</p></div>
-                    <div class="col-span-2"><p class="text-[10px] text-gray-400 font-bold uppercase">OC</p><p class="font-black text-[#004f89]">${p.oc}</p></div>
-                    <div class="col-span-2"><p class="text-[10px] text-gray-400 font-bold uppercase">Material</p><p class="text-xs text-gray-700">${p.articulo}</p></div>
+                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Proveedor</p><p class="font-bold text-sm text-gray-800">${p.supplier}</p></div>
+                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Planta</p><p class="font-bold text-sm text-gray-800">${p.planta}</p></div>
+                    <div class="col-span-2 border-t pt-4"><p class="text-[10px] text-[#004f89] font-bold uppercase mb-1">Orden de Compra</p><p class="font-black text-lg text-[#004f89] tracking-tighter">${p.oc}</p></div>
+                    <div class="col-span-2"><p class="text-[10px] text-gray-400 font-bold uppercase mb-1">Material</p><p class="text-xs text-gray-700 leading-tight">${p.articulo}</p></div>
+                    <div class="col-span-2 bg-gray-50 p-3 rounded-xl border border-gray-100 flex justify-between items-center">
+                        <p class="text-xs font-bold text-gray-500 uppercase">Volumen de Entrega</p>
+                        <p class="font-black text-gray-800 text-lg">${p.pallets} Pallets</p>
+                    </div>
                 </div>`;
             document.getElementById('btnCancelarTurno').onclick = async () => {
-                if(!confirm("¿Cancelar turno?")) return;
+                if(!confirm("¿Cancelar este turno definitivamente?")) return;
                 try {
                     const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'cancel_shift', id: event.id }) });
-                    if((await res.json()).success) { event.remove(); closeModal(); }
-                } catch(e) { alert(e.message); }
+                    if((await res.json()).success) { event.remove(); closeModal(); alert("Turno cancelado."); }
+                } catch(e) { alert("Error al cancelar."); }
             };
             document.getElementById('eventModal').classList.remove('hidden');
         };
@@ -259,7 +292,7 @@
                 return { id: s.id, title: `OC: ${s.oc}`, start: startStr, end: endStr, backgroundColor: String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d', borderColor:'transparent', extendedProps: { supplier:s.nombre_proveedor, supplier_id:s.proveedor_id, planta:s.planta, oc:s.oc, articulo:s.articulo, pallets:pCount } };
             });
             calendar.removeAllEventSources(); calendar.addEventSource(events);
-            if(document.getElementById('users-view').classList.contains('hidden') === false) renderUserList();
+            if(!document.getElementById('users-view').classList.contains('hidden')) renderUserList();
         }
         loadData();
     });
