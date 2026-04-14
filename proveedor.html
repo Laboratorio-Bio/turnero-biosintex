@@ -39,7 +39,7 @@
                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
                     <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="bg-[#004f89] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Órdenes de Compra Pendientes</h2>
                     <div id="oc-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
-                        <p class="text-gray-500 italic py-4 text-sm font-medium">Buscando tus pedidos en el sistema...</p>
+                        <p class="text-gray-500 italic py-4 text-sm font-medium">Buscando tus pedidos...</p>
                     </div>
                 </div>
 
@@ -146,7 +146,13 @@
         }
 
         function renderOCs() {
-            const userOrders = (db.maestro_oc || []).filter(o => String(o.proveedor || o.nombre_2).split('.')[0].trim() === String(currentUser.proveedor_id).trim());
+            const ocData = db.maestro_oc || [];
+            // Filtro robusto usando el campo nombre_proveedor o proveedor_id
+            const userOrders = ocData.filter(o => {
+                const idProv = String(o.nombre_proveedor || o.proveedor || o.nombre_2).split('.')[0].trim();
+                return idProv === String(currentUser.proveedor_id).trim();
+            });
+
             document.getElementById('oc-container').innerHTML = userOrders.map(o => `
                 <div onclick="selectOC(this, '${o.oc}')" class="oc-card p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-blue-200 transition-all group">
                     <span class="text-[9px] font-black text-[#004f89] bg-blue-50 px-2 py-1 rounded uppercase">OC: ${o.oc}</span>
@@ -191,7 +197,11 @@
             const times = ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00"];
             const booked = new Set();
             (db.turnos || []).forEach(s => {
-                if (normalizeDate(s.fecha) === date && String(s.planta).includes(currentOC.planta) && String(s.estado).toLowerCase().trim() === 'confirmado') {
+                const sDate = normalizeDate(s.fecha);
+                const sPlanta = String(s.planta).toLowerCase();
+                const curPlanta = String(currentOC.planta).toLowerCase();
+                
+                if (sDate === date && sPlanta.includes(curPlanta) && String(s.estado).toLowerCase().trim() === 'confirmado') {
                     const idx = times.indexOf(s.hora);
                     if (idx !== -1) { for(let i=0; i < Math.ceil((s.pallets||1)/5); i++) if(idx+i < times.length) booked.add(times[idx+i]); }
                 }
@@ -216,7 +226,8 @@
         };
 
         function renderHistory() {
-            const future = (db.turnos || []).filter(s => String(s.proveedor_id).trim() === String(currentUser.proveedor_id).trim() && String(s.estado).toLowerCase().trim() === 'confirmado');
+            const historyData = db.turnos || [];
+            const future = historyData.filter(s => String(s.proveedor_id).trim() === String(currentUser.proveedor_id).trim() && String(s.estado).toLowerCase().trim() === 'confirmado');
             document.getElementById('history-body').innerHTML = future.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(s => `
                 <tr class="hover:bg-gray-50 text-[11px] font-bold text-gray-700">
                     <td class="px-8 py-4 font-black">${s.fecha.split('-').reverse().join('/')}</td>
