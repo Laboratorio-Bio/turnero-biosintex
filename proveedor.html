@@ -13,8 +13,7 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
         h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
         .slot-btn:hover:not(:disabled) { transform: scale(1.02); }
-        .slot-btn:disabled { opacity: 0.5; background: #e5e7eb; border-color: #d1d5db; color: #9ca3af; cursor: not-allowed; }
-        .slot-occupied { background: #fee2e2 !important; border-color: #fecaca !important; color: #b91c1c !important; cursor: not-allowed; }
+        .slot-btn:disabled { opacity: 0.5; background: #f3f4f6; color: #d1d5db; cursor: not-allowed; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
@@ -26,121 +25,69 @@
     <div class="flex items-center gap-4">
         <span class="text-sm font-bold text-gray-500" id="user-display">Cargando...</span>
         <button onclick="openProfile(true)" class="text-[#004f89] font-bold text-xs bg-blue-50 px-3 py-1.5 rounded-lg border border-blue-100 hover:bg-blue-100 transition shadow-sm flex items-center gap-1">
-            <span class="material-symbols-outlined text-sm">person_edit</span> Editar Perfil
+            <span class="material-symbols-outlined text-sm">person_edit</span> Perfil
         </button>
-        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-xs bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition">Cerrar Sesión</a>
+        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-xs bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition">Salir</a>
     </div>
 </header>
 
 <main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
     <div class="max-w-7xl mx-auto">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <!-- COLUMNA IZQUIERDA: NUEVO TURNO -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- PASO 1: SELECCIONAR OC -->
+                <!-- SELECCIÓN DE OC -->
                 <div class="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="bg-[#004f89] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Seleccionar Orden de Compra Pendiente</h2>
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="bg-[#004f89] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">1</span> Órdenes de Compra Pendientes</h2>
                     <div id="oc-container" class="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto pr-2">
-                        <p class="text-gray-500 italic py-4">Obteniendo tus pedidos...</p>
+                        <p class="text-gray-500 italic py-4 text-sm font-medium">Buscando tus pedidos en el sistema...</p>
                     </div>
                 </div>
 
-                <!-- PASO 2: SELECCIONAR FECHA Y TURNO -->
-                <div id="step-schedule" class="hidden bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="bg-[#004f89] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Seleccionar Fecha y Horario</h2>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Cantidad de Pallets a entregar</label>
-                            <input type="number" id="pallets_input" min="1" value="1" class="w-full p-3 rounded-xl border-gray-300 shadow-sm focus:border-[#004f89] transition">
-                            <p class="text-[10px] text-gray-400 mt-1 font-medium italic">Máximo 5 pallets por hora. Recepción cierra 13:00 hs.</p>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-500 uppercase mb-2">Elegir Fecha (Lunes a Viernes)</label>
-                            <input type="date" id="date_input" class="w-full p-3 rounded-xl border-gray-300 shadow-sm focus:border-[#004f89] transition">
-                        </div>
+                <!-- SELECCIÓN DE TURNO -->
+                <div id="step-schedule" class="hidden bg-white p-8 rounded-2xl shadow-lg border border-gray-100 animate-in fade-in duration-300">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2"><span class="bg-[#004f89] text-white w-6 h-6 rounded-full flex items-center justify-center text-xs">2</span> Selección de Fecha y Horario</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Cantidad de Pallets</label><input type="number" id="pallets_input" min="1" value="1" class="w-full p-3 rounded-xl border-gray-200 bg-gray-50 font-bold focus:ring-[#004f89]"><p class="text-[10px] text-gray-400 mt-1 italic">Máximo 5 pallets por hora.</p></div>
+                        <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-2">Fecha de Entrega</label><input type="date" id="date_input" class="w-full p-3 rounded-xl border-gray-200 bg-gray-50 focus:ring-[#004f89]"></div>
                     </div>
-
-                    <div>
-                        <label class="block text-xs font-bold text-gray-500 uppercase mb-4">Turnos Disponibles según cantidad de pallets</label>
-                        <div id="slots-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
-                            <!-- Los botones se cargan dinámicamente -->
-                        </div>
-                    </div>
+                    <div><label class="block text-[10px] font-black text-gray-400 uppercase mb-4">Turnos Disponibles</label><div id="slots-container" class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3"></div></div>
                 </div>
             </div>
 
-            <!-- COLUMNA DERECHA: RESUMEN Y TURNOS TOMADOS -->
             <div class="space-y-6">
                 <div id="summary-card" class="hidden bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden sticky top-24">
-                    <div class="bg-[#004f89] p-4 text-white font-bold flex items-center gap-2"><span class="material-symbols-outlined">assignment</span> Resumen del Turno</div>
+                    <div class="bg-[#004f89] p-4 text-white font-bold flex items-center gap-2"><span class="material-symbols-outlined">assignment</span> Resumen</div>
                     <div class="p-6 space-y-4">
-                        <div><p class="text-xs text-gray-400 font-bold uppercase">Planta de Entrega</p><p id="sum-planta" class="font-bold text-gray-800"></p></div>
-                        <div><p class="text-xs text-gray-400 font-bold uppercase">Material</p><p id="sum-articulo" class="text-sm font-medium leading-tight"></p></div>
-                        <div><p class="text-xs text-gray-400 font-bold uppercase">Fecha y Turno Elegido</p><p id="sum-time" class="font-extrabold text-[#004f89] text-lg">-</p></div>
-                        <button id="confirm-btn" disabled class="w-full py-4 bg-[#004f89] text-white font-extrabold rounded-xl shadow-lg transition disabled:bg-gray-200 disabled:shadow-none hover:bg-blue-900">Confirmar Reserva</button>
+                        <div><p class="text-[10px] text-gray-400 font-bold uppercase">Planta</p><p id="sum-planta" class="font-bold text-gray-800"></p></div>
+                        <div><p class="text-[10px] text-gray-400 font-bold uppercase">Material</p><p id="sum-articulo" class="text-xs font-medium leading-tight text-gray-600"></p></div>
+                        <div><p class="text-[10px] text-gray-400 font-bold uppercase">Fecha y Hora</p><p id="sum-time" class="font-black text-[#004f89] text-xl">-</p></div>
+                        <button id="confirm-btn" disabled class="w-full py-4 bg-[#004f89] text-white font-black rounded-xl shadow-lg transition-all disabled:bg-gray-200 hover:bg-blue-900">Confirmar Reserva</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- TABLA DE HISTORIAL -->
-        <div class="mt-12 bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-            <div class="p-6 border-b bg-gray-50 flex justify-between items-center">
-                <h2 class="text-xl font-bold flex items-center gap-2 text-gray-700">
-                    <span class="material-symbols-outlined text-gray-500">history</span> Mis Próximas Entregas
-                </h2>
-                <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">Solo turnos futuros</span>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 border-b text-[10px] font-bold text-gray-400 uppercase">
-                        <tr>
-                            <th class="px-6 py-4">Fecha</th>
-                            <th class="px-6 py-4">Hora</th>
-                            <th class="px-6 py-4">Planta</th>
-                            <th class="px-6 py-4">OC</th>
-                            <th class="px-6 py-4 text-center">Pallets</th>
-                            <th class="px-6 py-4 text-center">Estado</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-body" class="divide-y divide-gray-100 text-sm">
-                        <!-- Cargado por JS -->
-                    </tbody>
-                </table>
-            </div>
+        <!-- HISTORIAL -->
+        <div class="mt-12 bg-white rounded-3xl shadow-lg border border-gray-100 overflow-hidden">
+            <div class="p-6 border-b bg-gray-50"><h2 class="font-black text-gray-700 uppercase text-xs tracking-widest">Mis Próximos Turnos</h2></div>
+            <div class="overflow-x-auto"><table class="w-full text-left"><thead class="bg-gray-50 text-[9px] font-black text-gray-400 uppercase tracking-tighter"><tr class="border-b"><th class="px-8 py-4">Fecha</th><th class="px-8 py-4">Hora</th><th class="px-8 py-4">Planta</th><th class="px-8 py-4">OC</th><th class="px-8 py-4 text-center">Pallets</th><th class="px-8 py-4 text-center">Estado</th></tr></thead><tbody id="history-body" class="divide-y divide-gray-100"></tbody></table></div>
         </div>
     </div>
 </main>
 
-<!-- MODAL PERFIL (OBLIGATORIO SI ESTÁ VACÍO) -->
-<div id="profile-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-300">
+<!-- MODAL PERFIL -->
+<div id="profile-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in duration-300">
         <div class="bg-[#004f89] p-8 text-white relative">
             <h3 class="text-2xl font-bold">Datos de Contacto</h3>
-            <p class="text-blue-100 text-sm mt-1">Necesarios para coordinar tu entrega.</p>
+            <p class="text-blue-100 text-xs mt-1">Obligatorio para coordinar entregas.</p>
             <button id="close-profile" class="hidden absolute top-4 right-4 hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
         </div>
-        <div class="p-8 space-y-6">
-            <div id="mandatory-warning" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-800 text-sm font-medium flex gap-3">
-                <span class="material-symbols-outlined text-amber-600">warning</span>
-                Por favor, completá tus datos de contacto para poder reservar turnos.
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Correo Electrónico</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-3 text-gray-400 material-symbols-outlined">mail</span>
-                    <input type="email" id="profile-email" class="w-full pl-10 p-3 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#004f89] focus:border-[#004f89]" placeholder="ejemplo@proveedor.com">
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-bold text-gray-400 uppercase mb-2">Teléfono / WhatsApp</label>
-                <div class="relative">
-                    <span class="absolute left-3 top-3 text-gray-400 material-symbols-outlined">call</span>
-                    <input type="tel" id="profile-tel" class="w-full pl-10 p-3 bg-gray-50 border-gray-200 rounded-xl focus:ring-[#004f89] focus:border-[#004f89]" placeholder="+54 11 ...">
-                </div>
-            </div>
-            <button id="save-profile" class="w-full py-4 bg-[#004f89] text-white font-extrabold rounded-2xl shadow-xl hover:bg-blue-900 transition-all">Guardar Datos</button>
+        <div class="p-8 space-y-5">
+            <div id="mandatory-warning" class="hidden bg-amber-50 p-4 rounded-xl border border-amber-200 text-amber-800 text-xs font-bold leading-tight">Por favor, completá tus datos de contacto para poder operar en el sistema.</div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Email Corporativo</label><input type="email" id="profile-email" class="w-full mt-1 p-3 bg-gray-50 border-gray-200 rounded-xl"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">WhatsApp / Teléfono</label><input type="tel" id="profile-tel" class="w-full mt-1 p-3 bg-gray-50 border-gray-200 rounded-xl"></div>
+            <button id="save-profile" class="w-full py-4 bg-[#004f89] text-white font-black rounded-2xl shadow-xl hover:bg-blue-900 transition-all">Guardar Perfil</button>
         </div>
     </div>
 </div>
@@ -159,25 +106,15 @@
 
     document.addEventListener('DOMContentLoaded', async function() {
         document.getElementById('user-display').innerText = currentUser.nombre;
-        
-        // VERIFICAR PERFIL OBLIGATORIO
-        if (!currentUser.email || !currentUser.telefono || currentUser.email === "" || currentUser.telefono === "") {
-            openProfile(false); // Abrir pero no permitir cerrar
-        }
-
+        if (!currentUser.email || !currentUser.telefono) openProfile(false);
         await loadData();
 
         window.openProfile = (allowClose) => {
             document.getElementById('profile-email').value = currentUser.email || '';
             document.getElementById('profile-tel').value = currentUser.telefono || '';
             document.getElementById('profile-modal').classList.remove('hidden');
-            if (allowClose) {
-                document.getElementById('close-profile').classList.remove('hidden');
-                document.getElementById('mandatory-warning').classList.add('hidden');
-            } else {
-                document.getElementById('close-profile').classList.add('hidden');
-                document.getElementById('mandatory-warning').classList.remove('hidden');
-            }
+            document.getElementById('close-profile').classList.toggle('hidden', !allowClose);
+            document.getElementById('mandatory-warning').classList.toggle('hidden', allowClose);
         };
 
         document.getElementById('close-profile').onclick = () => document.getElementById('profile-modal').classList.add('hidden');
@@ -185,89 +122,52 @@
         document.getElementById('save-profile').onclick = async () => {
             const email = document.getElementById('profile-email').value.trim();
             const tel = document.getElementById('profile-tel').value.trim();
-            if (!email || !tel) return alert("Ambos campos son obligatorios.");
-
-            const btn = document.getElementById('save-profile');
-            btn.innerText = "Guardando..."; btn.disabled = true;
-
+            if (!email || !tel) return alert("Completá ambos campos.");
             try {
-                const res = await fetch(CONFIG.API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'update_profile', username: currentUser.username, email: email, telefono: tel })
-                });
-                const r = await res.json();
-                if (r.success) {
-                    currentUser.email = email;
-                    currentUser.telefono = tel;
+                const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_profile', username: currentUser.username, email: email, telefono: tel }) });
+                if ((await res.json()).success) {
+                    currentUser.email = email; currentUser.telefono = tel;
                     localStorage.setItem('biosintex_session', JSON.stringify(currentUser));
-                    alert("¡Datos guardados! Ya podés operar.");
-                    document.getElementById('profile-modal').classList.add('hidden');
+                    alert("¡Perfil actualizado!"); document.getElementById('profile-modal').classList.add('hidden');
                 }
-            } catch(e) { alert("Error: " + e.message); }
-            finally { btn.innerText = "Guardar Datos"; btn.disabled = false; }
+            } catch(e) { alert("Error."); }
         };
 
         const today = new Date();
-        const tomorrow = new Date(today);
-        tomorrow.setDate(tomorrow.getDate() + 1);
+        const tomorrow = new Date(today); tomorrow.setDate(tomorrow.getDate() + 1);
         document.getElementById('date_input').min = tomorrow.toISOString().split('T')[0];
 
         async function loadData() {
             const res = await fetch(CONFIG.API_URL + "?action=get_all");
-            db = await res.json();
-            
-            // Buscar pestañas de forma flexible
-            const findK = (name) => Object.keys(db).find(k => k.trim().toLowerCase() === name);
-            const ocKey = findK('maestro_oc');
-            const turnosKey = findK('turnos');
-            const blockKey = findK('bloqueos');
-
-            renderOCs(ocKey);
-            renderHistory(turnosKey);
-            blockedDates = (db[blockKey] || []).map(b => b.fecha);
+            const raw = await res.json();
+            db = {}; Object.keys(raw).forEach(k => { db[k.trim().toLowerCase()] = raw[k]; });
+            renderOCs(); renderHistory();
+            blockedDates = (db.bloqueos || []).map(b => b.fecha);
         }
 
-        function renderOCs(ocKey) {
-            const container = document.getElementById('oc-container');
-            const userOrders = (db[ocKey] || []).filter(o => String(o.Proveedor).split('.')[0].trim() === String(currentUser.proveedor_id).trim());
-
-            if (userOrders.length === 0) {
-                container.innerHTML = `<div class="col-span-2 text-center py-10 bg-gray-50 rounded-xl border border-dashed text-gray-400">No tenés órdenes de compra pendientes.</div>`;
-                return;
-            }
-
-            container.innerHTML = userOrders.map(o => `
-                <div onclick="selectOC(this, '${o.OC}')" class="oc-card p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-blue-200 hover:bg-blue-50/30 transition-all group">
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-xs font-black text-[#004f89] bg-blue-50 px-2 py-1 rounded">OC: ${o.OC}</span>
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">${o.Planta}</span>
-                    </div>
-                    <p class="text-sm font-bold text-gray-700 leading-tight mb-2 group-hover:text-[#004f89]">${o.Artículo}</p>
-                    <div class="flex items-center gap-1 text-[#059669]"><span class="material-symbols-outlined text-sm">inventory_2</span> <span class="text-xs font-black">PENDIENTE: ${o.Pendiente}</span></div>
+        function renderOCs() {
+            const userOrders = (db.maestro_oc || []).filter(o => String(o.proveedor || o.nombre_2).split('.')[0].trim() === String(currentUser.proveedor_id).trim());
+            document.getElementById('oc-container').innerHTML = userOrders.map(o => `
+                <div onclick="selectOC(this, '${o.oc}')" class="oc-card p-5 border-2 border-gray-100 rounded-2xl cursor-pointer hover:border-blue-200 transition-all group">
+                    <span class="text-[9px] font-black text-[#004f89] bg-blue-50 px-2 py-1 rounded uppercase">OC: ${o.oc}</span>
+                    <p class="text-sm font-bold text-gray-700 mt-2 leading-tight">${o.articulo}</p>
+                    <p class="text-[9px] font-black text-emerald-600 uppercase mt-2">📍 ${o.planta} | 📦 PENDIENTE: ${o.pendiente}</p>
                 </div>
-            `).join('');
+            `).join('') || '<p class="col-span-2 text-center text-xs text-gray-400">Sin pedidos pendientes.</p>';
         }
 
         window.selectOC = (el, ocNumber) => {
-            const findK = (name) => Object.keys(db).find(k => k.trim().toLowerCase() === name);
-            const ocKey = findK('maestro_oc');
-            currentOC = db[ocKey].find(o => o.OC === ocNumber);
-            document.querySelectorAll('.oc-card').forEach(c => c.classList.remove('border-[#004f89]', 'bg-blue-50'));
-            el.classList.add('border-[#004f89]', 'bg-blue-50');
+            currentOC = db.maestro_oc.find(o => String(o.oc) === String(ocNumber));
+            document.querySelectorAll('.oc-card').forEach(c => c.classList.remove('border-[#004f89]', 'bg-blue-50/50'));
+            el.classList.add('border-[#004f89]', 'bg-blue-50/50');
             document.getElementById('step-schedule').classList.remove('hidden');
             document.getElementById('summary-card').classList.remove('hidden');
-            document.getElementById('sum-planta').innerText = currentOC.Planta;
-            document.getElementById('sum-articulo').innerText = currentOC.Artículo;
+            document.getElementById('sum-planta').innerText = currentOC.planta;
+            document.getElementById('sum-articulo').innerText = currentOC.articulo;
             resetSelection();
         };
 
-        function resetSelection() {
-            selectedSlot = null;
-            document.getElementById('sum-time').innerText = "-";
-            document.getElementById('confirm-btn').disabled = true;
-            renderSlots();
-        }
-
+        function resetSelection() { selectedSlot = null; document.getElementById('sum-time').innerText = "-"; document.getElementById('confirm-btn').disabled = true; renderSlots(); }
         document.getElementById('date_input').onchange = renderSlots;
         document.getElementById('pallets_input').oninput = renderSlots;
 
@@ -275,113 +175,58 @@
             const container = document.getElementById('slots-container');
             const date = document.getElementById('date_input').value;
             const pallets = parseInt(document.getElementById('pallets_input').value) || 1;
-            
-            if (!date) { container.innerHTML = '<p class="col-span-full text-center text-xs text-gray-400 py-4">Seleccioná una fecha para ver horarios.</p>'; return; }
+            if (!date) { container.innerHTML = '<p class="col-span-full text-center text-[10px] text-gray-400">Elegí fecha.</p>'; return; }
 
-            // Normalizador de fechas para comparar (evita problemas de zona horaria)
             const normalizeDate = (f) => {
-                if(!f) return "";
-                let s = String(f).split('T')[0].split(' ')[0];
+                if(!f) return ""; let s = String(f).split('T')[0];
                 let parts = s.split(/[\/-]/);
-                if (parts.length !== 3) return s;
-                let [a, b, c] = parts;
-                return a.length === 4 ? `${a}-${b.padStart(2,'0')}-${c.padStart(2,'0')}` : `${c}-${b.padStart(2,'0')}-${a.padStart(2,'0')}`;
+                return parts.length !== 3 ? s : (parts[0].length === 4 ? `${parts[0]}-${parts[1].padStart(2,'0')}-${parts[2].padStart(2,'0')}` : `${parts[2]}-${parts[1].padStart(2,'0')}-${parts[0].padStart(2,'0')}`);
             };
 
-            const selectedDateStr = normalizeDate(date);
-            const isBlocked = blockedDates.some(b => normalizeDate(b) === selectedDateStr);
-            console.log("Chequeando bloqueo para:", selectedDateStr, "Bloqueados:", blockedDates.map(normalizeDate));
-
-            if (isBlocked) { 
-                container.innerHTML = '<div class="col-span-full bg-red-50 text-red-600 p-6 rounded-2xl text-center border-2 border-red-100"><p class="text-sm font-black">🚫 FECHA BLOQUEADA</p><p class="text-xs font-medium mt-1">Biosintex no recibe mercadería ese día por tareas internas.</p></div>'; 
-                return; 
+            if (blockedDates.some(b => normalizeDate(b) === date)) {
+                container.innerHTML = '<div class="col-span-full bg-red-50 text-red-700 p-6 rounded-2xl text-center border-2 border-red-100 font-bold text-xs uppercase">Día bloqueado por Biosintex.</div>'; return;
             }
 
-            const requiredBlocks = Math.ceil(pallets / 5);
-            const allSlots = ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00"];
-            
-            const bookedTimes = new Set();
-            const findK = (name) => Object.keys(db).find(k => k.trim().toLowerCase() === name);
-            const turnosKey = findK('turnos');
-
-            (db[turnosKey] || []).forEach(s => {
-                const sDateStr = normalizeDate(s.fecha);
-                if (sDateStr === selectedDateStr && s.planta === currentOC.Planta && String(s.estado).toLowerCase().trim() === 'confirmado') {
-                    const startIdx = allSlots.indexOf(s.hora);
-                    if (startIdx !== -1) {
-                        const blocks = Math.ceil((parseInt(s.pallets) || 1) / 5);
-                        for (let i = 0; i < blocks; i++) { if (startIdx + i < allSlots.length) bookedTimes.add(allSlots[startIdx + i]); }
-                    }
+            const reqBlocks = Math.ceil(pallets / 5);
+            const times = ["07:00", "08:00", "09:00", "10:00", "11:00", "12:00"];
+            const booked = new Set();
+            (db.turnos || []).forEach(s => {
+                if (normalizeDate(s.fecha) === date && String(s.planta).includes(currentOC.planta) && String(s.estado).toLowerCase().trim() === 'confirmado') {
+                    const idx = times.indexOf(s.hora);
+                    if (idx !== -1) { for(let i=0; i < Math.ceil((s.pallets||1)/5); i++) if(idx+i < times.length) booked.add(times[idx+i]); }
                 }
             });
 
-            container.innerHTML = allSlots.map((time, i) => {
-                let isOccupied = false;
-                for (let j = 0; j < requiredBlocks; j++) {
-                    if (i + j >= allSlots.length || bookedTimes.has(allSlots[i+j])) { isOccupied = true; break; }
-                }
-
-                if (isOccupied) return `<button disabled class="p-3 text-xs font-bold rounded-xl border border-gray-100 bg-gray-50 text-gray-300">Ocupado</button>`;
-                return `<button onclick="setSlot('${time}')" class="slot-btn p-3 text-xs font-bold rounded-xl border ${selectedSlot === time ? 'bg-[#004f89] text-white border-[#004f89]' : 'bg-white text-gray-700 border-gray-200 hover:border-[#004f89]'} transition-all">${time}</button>`;
+            container.innerHTML = times.map((t, i) => {
+                let occ = false; for(let j=0; j<reqBlocks; j++) if(i+j >= times.length || booked.has(times[i+j])) occ = true;
+                if(occ) return `<button disabled class="p-3 text-[10px] font-black rounded-xl bg-gray-100 text-gray-300">OCUPADO</button>`;
+                return `<button onclick="setSlot('${t}')" class="p-3 text-xs font-black rounded-xl border-2 ${selectedSlot === t ? 'bg-[#004f89] text-white border-[#004f89]' : 'bg-white text-gray-700 border-gray-100 hover:border-[#004f89]'} transition-all">${t}</button>`;
             }).join('');
         }
 
-        window.setSlot = (time) => {
-            selectedSlot = time;
-            const date = document.getElementById('date_input').value;
-            const parts = date.split('-');
-            document.getElementById('sum-time').innerText = `${parts[2]}/${parts[1]} a las ${time} hs`;
-            document.getElementById('confirm-btn').disabled = false;
-            document.getElementById('confirm-btn').classList.add('animate-bounce');
-            setTimeout(() => document.getElementById('confirm-btn').classList.remove('animate-bounce'), 1000);
-            renderSlots();
-        };
+        window.setSlot = (t) => { selectedSlot = t; const d = document.getElementById('date_input').value.split('-').reverse().join('/'); document.getElementById('sum-time').innerText = `${d} - ${t} hs`; document.getElementById('confirm-btn').disabled = false; renderSlots(); };
 
         document.getElementById('confirm-btn').onclick = async () => {
-            const btn = document.getElementById('confirm-btn');
-            const data = {
-                action: 'book_shift',
-                proveedor_id: currentUser.proveedor_id,
-                nombre_proveedor: currentUser.nombre,
-                fecha: document.getElementById('date_input').value,
-                hora: selectedSlot,
-                planta: currentOC.Planta,
-                oc: currentOC.OC,
-                articulo: currentOC.Artículo,
-                pallets: document.getElementById('pallets_input').value
-            };
-
-            btn.disabled = true; btn.innerText = "Procesando...";
-
+            const btn = document.getElementById('confirm-btn'); btn.disabled = true; btn.innerText = "Reservando...";
+            const data = { action:'book_shift', proveedor_id:currentUser.proveedor_id, nombre_proveedor:currentUser.nombre, fecha:document.getElementById('date_input').value, hora:selectedSlot, planta:currentOC.planta, oc:currentOC.oc, articulo:currentOC.articulo, pallets:document.getElementById('pallets_input').value };
             try {
                 const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify(data) });
-                const r = await res.json();
-                if (r.success) {
-                    alert("¡Turno confirmado exitosamente!");
-                    location.reload();
-                }
-            } catch(e) { alert("Error: " + e.message); btn.disabled = false; btn.innerText = "Confirmar Reserva"; }
+                if ((await res.json()).success) { alert("¡Turno confirmado!"); location.reload(); }
+            } catch(e) { alert("Error."); btn.disabled = false; btn.innerText = "Confirmar Reserva"; }
         };
 
-        function renderHistory(turnosKey) {
-            const body = document.getElementById('history-body');
-            const history = (db[turnosKey] || []).filter(s => String(s.proveedor_id).trim() === String(currentUser.proveedor_id).trim());
-            
-            if (history.length === 0) { body.innerHTML = '<tr><td colspan="6" class="px-6 py-10 text-center text-gray-400 italic font-medium">No tenés entregas confirmadas.</td></tr>'; return; }
-
-            const todayStr = new Date().toISOString().split('T')[0];
-            const futureHistory = history.filter(s => s.fecha >= todayStr && String(s.estado).toLowerCase().trim() === 'confirmado');
-
-            body.innerHTML = futureHistory.sort((a,b) => a.fecha.localeCompare(b.fecha)).map(s => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-6 py-4 font-bold text-gray-700">${s.fecha.split('-').reverse().join('/')}</td>
-                    <td class="px-6 py-4 font-black text-[#004f89]">${s.hora} hs</td>
-                    <td class="px-6 py-4 text-xs font-semibold text-gray-500">${s.planta}</td>
-                    <td class="px-6 py-4 font-medium">${s.oc}</td>
-                    <td class="px-6 py-4 text-center font-bold text-gray-700">${s.pallets || 1}</td>
-                    <td class="px-6 py-4 text-center"><span class="px-3 py-1 bg-green-100 text-green-700 text-[10px] font-black rounded-full uppercase tracking-tighter">Confirmado</span></td>
+        function renderHistory() {
+            const future = (db.turnos || []).filter(s => String(s.proveedor_id).trim() === String(currentUser.proveedor_id).trim() && String(s.estado).toLowerCase().trim() === 'confirmado');
+            document.getElementById('history-body').innerHTML = future.sort((a,b)=>a.fecha.localeCompare(b.fecha)).map(s => `
+                <tr class="hover:bg-gray-50 text-[11px] font-bold text-gray-700">
+                    <td class="px-8 py-4 font-black">${s.fecha.split('-').reverse().join('/')}</td>
+                    <td class="px-8 py-4 text-[#004f89] font-black">${s.hora} hs</td>
+                    <td class="px-8 py-4 text-xs font-medium text-gray-400">${s.planta}</td>
+                    <td class="px-8 py-4">${s.oc}</td>
+                    <td class="px-8 py-4 text-center">${s.pallets || 1}</td>
+                    <td class="px-8 py-4 text-center"><span class="px-3 py-1 bg-green-50 text-green-700 text-[9px] font-black rounded-lg uppercase border border-green-100">Confirmado</span></td>
                 </tr>
-            `).join('');
+            `).join('') || '<tr><td colspan="6" class="p-10 text-center text-gray-400 italic">No tenés turnos futuros.</td></tr>';
         }
     });
 </script>
