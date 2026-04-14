@@ -8,233 +8,147 @@
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
-    <!-- Librerías para leer CSV y Excel -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="config.js"></script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
         h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
-        .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; }
+        .fc-event { cursor: default; border: none !important; padding: 2px 4px; border-radius: 4px; font-size: 0.75rem; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
 
 <header class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 h-16 shadow-sm border-b">
     <div class="flex items-center gap-2">
-        <span class="text-[#004f89] font-extrabold text-xl tracking-tighter">Biosintex Planificación</span>
+        <span class="text-[#004f89] font-extrabold text-xl tracking-tighter">Biosintex Compras</span>
     </div>
     <div class="flex items-center gap-4">
-        <span class="text-sm font-bold text-gray-500" id="user-display">Sector Compras</span>
-        <a href="#" onclick="logout(); return false;" class="text-red-600 font-medium hover:underline text-sm border px-3 py-1 rounded">Cerrar Sesión</a>
+        <span class="text-sm font-bold text-gray-400 uppercase tracking-widest" id="user-display">Sector Compras</span>
+        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-xs bg-red-50 px-3 py-1.5 rounded-lg border border-red-100 transition">Cerrar Sesión</a>
     </div>
 </header>
 
 <main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div>
-                <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Panel de <span class="text-[#004f89]">Compras</span></h1>
-                <p class="text-gray-500 mt-1">Visibilidad de turnos y actualización de OC</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-3">
-                <input type="file" id="uploadFile" accept=".csv, .xlsx, .xls" class="hidden">
-                <button onclick="document.getElementById('uploadFile').click()" class="bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-green-700 transition flex items-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined semi-bold">upload_file</span>
-                    Actualizar Maestro OC (.xlsx / .csv)
-                </button>
-            </div>
-        </header>
-
-        <div class="grid grid-cols-1 gap-6">
-            <div class="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
-                <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
-                    <h2 class="font-bold text-gray-700">Estado de Recepción</h2>
-                    <select id="plantaFilter" class="p-1.5 border rounded-lg text-xs font-bold">
-                        <option value="all">Todas las Plantas</option>
-                        <option value="Barracas">Barracas</option>
-                        <option value="Pibera">Pibera</option>
-                    </select>
+    <div class="max-w-7xl mx-auto space-y-8">
+        <!-- SECCIÓN CARGA ERP -->
+        <div class="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div>
+                    <h1 class="text-2xl font-black text-[#0b1c30] tracking-tight">Actualizar Maestro de O.C.</h1>
+                    <p class="text-gray-500 text-sm mt-1">Subí el reporte del ERP (.xlsx o .csv) para actualizar las órdenes pendientes.</p>
                 </div>
-                <div id='calendar'></div>
+                <div class="relative group">
+                    <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="bg-[#004f89] text-white px-8 py-4 rounded-2xl font-black hover:bg-blue-900 transition-all shadow-lg flex items-center gap-3">
+                        <span class="material-symbols-outlined">upload_file</span>
+                        CARGAR ARCHIVO ERP
+                    </button>
+                    <p id="file-name" class="text-[10px] text-gray-400 mt-2 text-center font-bold"></p>
+                </div>
             </div>
+            
+            <div id="loading" class="hidden mt-6 text-center py-10 bg-blue-50 rounded-2xl border border-dashed border-blue-200">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-[#004f89] border-t-transparent rounded-full mb-3"></div>
+                <p class="text-sm font-bold text-[#004f89]">Procesando y sincronizando datos...</p>
+            </div>
+        </div>
+
+        <!-- SECCIÓN CALENDARIO LECTURA -->
+        <div class="bg-white rounded-3xl shadow-xl border border-gray-200 overflow-hidden">
+            <div class="p-6 border-b bg-gray-50 flex justify-between items-center">
+                <h2 class="text-lg font-black text-gray-700 uppercase tracking-tighter">Cronograma de Recepciones (Solo Lectura)</h2>
+                <div class="flex gap-4">
+                    <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400">
+                        <span class="w-2 h-2 rounded-full bg-[#004f89]"></span> BARRACAS
+                        <span class="w-2 h-2 rounded-full bg-[#006e2d] ml-2"></span> PIBERA
+                    </div>
+                </div>
+            </div>
+            <div id='calendar' class="p-2"></div>
         </div>
     </div>
 </main>
-
-<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm">
-    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center">
-            <h3 class="text-xl font-bold">Detalle del Turno</h3>
-            <button onclick="closeModal()" class="hover:bg-white/20 rounded-full p-1"><span class="material-symbols-outlined">close</span></button>
-        </div>
-        <div class="p-6 space-y-4" id="modalContent"></div>
-        <div class="bg-gray-50 p-4 border-t flex justify-end">
-            <button onclick="closeModal()" class="px-6 py-2 bg-gray-200 text-gray-700 font-bold rounded-lg hover:bg-gray-300 transition">Cerrar</button>
-        </div>
-    </div>
-</div>
 
 <script>
     const sessionStr = localStorage.getItem('biosintex_session');
     if (!sessionStr) window.location.href = 'login.html';
     const currentUser = JSON.parse(sessionStr);
 
-    function logout() {
-        localStorage.removeItem('biosintex_session');
-        window.location.href = 'login.html';
-    }
+    function logout() { localStorage.removeItem('biosintex_session'); window.location.href = 'login.html'; }
 
     var calendar;
-    var globalDB = {};
 
-    document.addEventListener('DOMContentLoaded', async function() {
-        const calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'timeGridWeek',
-            locale: 'es',
-            slotMinTime: '07:00:00',
-            slotMaxTime: '14:00:00',
-            hiddenDays: [0, 6],
-            allDaySlot: false,
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
-            eventClick: (info) => showEventDetails(info.event)
+    document.addEventListener('DOMContentLoaded', function() {
+        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
+            initialView: 'timeGridWeek', locale: 'es', slotMinTime: '07:00:00', slotMaxTime: '14:00:00',
+            hiddenDays: [0, 6], allDaySlot: false,
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' }
         });
         calendar.render();
+        loadData();
 
-        window.closeModal = () => document.getElementById('eventModal').classList.add('hidden');
+        document.getElementById('fileInput').addEventListener('change', handleFile);
+    });
 
-        window.showEventDetails = (event) => {
-            const p = event.extendedProps;
-            const start = event.start;
-            const supplierData = (globalDB.USUARIOS || []).find(u => String(u.proveedor_id).trim() === String(p.supplier_id).trim());
-            
-            document.getElementById('modalContent').innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
-                        <p class="text-xs text-blue-600 font-bold uppercase mb-1">Contacto del Proveedor</p>
-                        <p class="font-semibold text-sm">📧 ${supplierData?.email || 'No cargado'}</p>
-                        <p class="font-semibold text-sm">📞 ${supplierData?.telefono || 'No cargado'}</p>
-                    </div>
-                    <div><p class="text-xs text-gray-500 font-bold uppercase">Proveedor</p><p class="font-semibold">${p.supplier}</p></div>
-                    <div><p class="text-xs text-gray-500 font-bold uppercase">Planta</p><p class="font-semibold">${p.planta}</p></div>
-                    <div><p class="text-xs text-gray-500 font-bold uppercase">OC</p><p class="font-bold text-[#004f89]">${p.oc}</p></div>
-                    <div><p class="text-xs text-gray-500 font-bold uppercase">Pallets</p><p class="font-bold">${p.pallets}</p></div>
-                    <div class="col-span-2"><p class="text-xs text-gray-500 font-bold uppercase">Material</p><p class="text-sm">${p.articulo}</p></div>
-                </div>`;
-            document.getElementById('eventModal').classList.remove('hidden');
-        };
-
-        // CARGA DE ARCHIVOS (EXCEL / CSV)
-        document.getElementById('uploadFile').onchange = function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if(!confirm("¿Estás seguro de que deseas sobrescribir el Maestro de OC?\nEsto reemplazará todos los artículos y pedidos pendientes actuales.")) return;
-
-            const reader = new FileReader();
-            const extension = file.name.split('.').pop().toLowerCase();
-
-            reader.onload = function(evt) {
-                let data = [];
-                
-                if (extension === 'csv') {
-                    // Procesar CSV
-                    Papa.parse(evt.target.result, {
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: (results) => processData(results.data)
-                    });
-                } else {
-                    // Procesar Excel
-                    const workbook = XLSX.read(evt.target.result, { type: 'binary' });
-                    const firstSheet = workbook.SheetNames[0];
-                    data = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
-                    processData(data);
-                }
-            };
-
-            if (extension === 'csv') reader.readAsText(file);
-            else reader.readAsBinaryString(file);
-        };
-
-        async function processData(data) {
-            if (!data || data.length === 0) return alert("El archivo está vacío.");
-            
-            // Normalizar encabezados para que no fallen por tildes o espacios
-            const normalize = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
-            const rawHeaders = Object.keys(data[0]);
-            const foundHeaders = rawHeaders.map(h => normalize(h));
-            
-            console.log("Encabezados detectados en el archivo:", rawHeaders);
-
-            const required = [
-                "Orden de Compra", 
-                "Descripción del Artículo", 
-                "Lugar Recepción", 
-                "Cantidad Pendientede Entrega"
-            ];
-            const normalizedRequired = required.map(h => normalize(h));
-
-            const missing = [];
-            normalizedRequired.forEach((req, idx) => {
-                if (!foundHeaders.includes(req)) missing.push(required[idx]);
-            });
-            
-            if(missing.length > 0) {
-                console.error("Faltan columnas:", missing);
-                return alert("No se encontraron las columnas críticas: " + missing.join(", ") + ".\n\nEl archivo debe contener estas columnas para que el sistema funcione.");
-            }
-
-            try {
-                const res = await fetch(CONFIG.API_URL, {
-                    method: 'POST',
-                    body: JSON.stringify({ action: 'update_maestro', data: data })
-                });
-                const r = await res.json();
-                if(r.success) {
-                    alert("¡Éxito! Se actualizaron " + r.count + " registros de OC.");
-                    location.reload();
-                } else throw new Error(r.error);
-            } catch(err) { alert("Error al subir: " + err.message); }
-        }
-
-        async function loadData() {
+    async function loadData() {
+        try {
             const res = await fetch(CONFIG.API_URL + "?action=get_all");
-            globalDB = await res.json();
-            
-            const rows = globalDB.TURNOS || [];
-            const events = rows.filter(s => String(s.estado).toLowerCase().trim() !== 'cancelado').map(s => {
-                const pCount = parseInt(s.pallets) || 1;
-                const endHours = Math.ceil(pCount / 5);
-                const color = String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d';
+            const raw = await res.json();
+            const db = {}; Object.keys(raw).forEach(k => { db[k.trim().toLowerCase()] = raw[k]; });
+
+            const events = (db.turnos || []).filter(s => String(s.estado).toLowerCase().trim() !== 'cancelado').map(s => {
+                const pCount = parseInt(s.pallets) || 1; const endHours = Math.ceil(pCount/5);
                 const startStr = `${s.fecha}T${s.hora}:00`;
-                let endDate = new Date(startStr);
-                endDate.setHours(endDate.getHours() + endHours);
+                let endDate = new Date(startStr); endDate.setHours(endDate.getHours() + endHours);
                 const pad = (n) => String(n).padStart(2,'0');
                 const endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
-
-                return {
-                    id: s.id,
-                    title: `OC: ${s.oc} (${pCount}p)`,
-                    start: startStr,
-                    end: endStr,
-                    backgroundColor: color,
-                    borderColor: 'transparent',
-                    extendedProps: { supplier: s.nombre_proveedor, supplier_id: s.proveedor_id, planta: s.planta, oc: s.oc, articulo: s.articulo, pallets: pCount }
+                return { 
+                    title: `OC: ${s.oc} | ${s.nombre_proveedor}`, 
+                    start: startStr, end: endStr, 
+                    backgroundColor: String(s.planta).includes('Barracas') ? '#004f89' : '#006e2d', 
+                    borderColor: 'transparent'
                 };
             });
+            calendar.removeAllEventSources();
             calendar.addEventSource(events);
-            
-            document.getElementById('plantaFilter').onchange = (e) => {
-                calendar.getEvents().forEach(ev => {
-                    ev.setProp('display', (e.target.value === 'all' || ev.extendedProps.planta === e.target.value) ? 'auto' : 'none');
-                });
-            };
-        }
-        loadData();
-    });
+        } catch(e) { console.error(e); }
+    }
+
+    function handleFile(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        document.getElementById('file-name').innerText = file.name;
+        const reader = new FileReader();
+        reader.onload = (evt) => {
+            const bstr = evt.target.result;
+            const wb = XLSX.read(bstr, { type: 'binary' });
+            const wsname = wb.SheetNames[0];
+            const ws = wb.Sheets[wsname];
+            const data = XLSX.utils.sheet_to_json(ws);
+            processData(data);
+        };
+        reader.readAsBinaryString(file);
+    }
+
+    const normalize = (s) => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+    async function processData(data) {
+        if(data.length === 0) return alert("Archivo vacío.");
+        const rawHeaders = Object.keys(data[0]);
+        const foundHeaders = rawHeaders.map(normalize);
+        const required = ["Orden de Compra", "Descripción del Artículo", "Lugar Recepción", "Cantidad Pendientede Entrega"];
+        const missing = required.filter(h => !foundHeaders.includes(normalize(h)));
+
+        if(missing.length > 0) return alert("Faltan columnas críticas: " + missing.join(", "));
+
+        document.getElementById('loading').classList.remove('hidden');
+        try {
+            const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify({ action:'update_maestro', data:data }) });
+            if((await res.json()).success) { alert("¡Maestro de O.C. actualizado con éxito!"); location.reload(); }
+        } catch(e) { alert("Error al subir."); }
+        finally { document.getElementById('loading').classList.add('hidden'); }
+    }
 </script>
 </body>
 </html>
