@@ -7,279 +7,241 @@
     <title>Biosintex | Panel Supervisor</title>
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;700;800&family=Inter:wght@400;500;600&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js"></script>
     <script src="config.js"></script>
     <style>
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
-        h1, h2, h3 { font-family: 'Manrope', sans-serif; color: #004f89; }
-        .fc-event { cursor: pointer; border: none !important; padding: 2px 4px; border-radius: 4px; }
-        .tab-btn.active { border-bottom: 3px solid #004f89; color: #004f89; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .fc { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: none !important; }
+        .fc-header-toolbar { margin-bottom: 30px !important; }
+        .fc-button-primary { background-color: #004f89 !important; border: none !important; border-radius: 10px !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 11px !important; }
+        .fc-event { border: none !important; padding: 4px 8px !important; border-radius: 6px !important; }
+        .fc-daygrid-day:hover { background-color: #f0f7ff; cursor: pointer; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
 
-<header class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-6 h-16 shadow-sm border-b">
-    <div class="flex items-center gap-2">
-        <span class="text-[#004f89] font-extrabold text-xl tracking-tighter">Biosintex Supervisor</span>
-    </div>
-    <div class="flex items-center gap-4">
-        <span class="text-xs font-bold text-gray-400 uppercase tracking-widest" id="top-user-display">Panel General</span>
-        <a href="#" onclick="logout(); return false;" class="text-red-600 font-bold hover:underline text-sm border px-3 py-1.5 rounded-lg bg-red-50 border-red-100 transition">Cerrar Sesión</a>
+<header class="fixed top-0 w-full z-50 bg-white flex justify-between items-center px-10 h-16 shadow-sm border-b">
+    <div class="flex items-center gap-2"><span class="text-[#004f89] font-extrabold text-xl tracking-tighter uppercase">Biosintex Supervisor</span></div>
+    <div class="flex items-center gap-6">
+        <nav class="flex gap-4 bg-gray-100 p-1 rounded-xl">
+            <button onclick="switchTab('cal')" id="tab-cal" class="px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all bg-white shadow-sm text-[#004f89]">Calendario</button>
+            <button onclick="switchTab('prov')" id="tab-prov" class="px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all text-gray-400">Proveedores</button>
+        </nav>
+        <button onclick="location.href='login.html'" class="text-red-600 font-bold text-xs hover:underline">Salir</button>
     </div>
 </header>
 
-<main class="pt-24 pb-12 px-4 md:px-12 min-h-screen">
-    <div class="max-w-7xl mx-auto">
-        <header class="mb-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-                <h1 class="text-3xl font-extrabold text-[#0b1c30] tracking-tighter">Gestión <span class="text-[#004f89]">Logística</span></h1>
-                <p class="text-gray-500 mt-1">Control de turnos y proveedores</p>
+<main class="pt-24 pb-12 px-10">
+    <!-- VISTA CALENDARIO -->
+    <div id="view-cal" class="space-y-8 animate-in fade-in duration-500">
+        <div class="flex justify-between items-end">
+            <div class="space-y-1">
+                <h1 class="text-3xl font-black text-[#004f89] tracking-tight">Gestión de Turnos</h1>
+                <p class="text-gray-400 font-medium">Control de recepciones y bloqueos de planta.</p>
             </div>
-            <div class="flex gap-2">
-                <button onclick="switchTab('calendar-view')" id="btn-tab-cal" class="tab-btn active px-4 py-2 font-bold text-gray-500 transition uppercase text-xs">Calendario</button>
-                <button onclick="switchTab('users-view')" id="btn-tab-users" class="tab-btn px-4 py-2 font-bold text-gray-500 transition uppercase text-xs">Proveedores</button>
-            </div>
-        </header>
-
-        <!-- VISTA CALENDARIO -->
-        <div id="calendar-view" class="space-y-6">
-            <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                <div class="flex gap-4">
-                    <select id="plantaFilter" class="p-2 border rounded-lg text-xs font-bold bg-gray-50">
-                        <option value="all">Todas las Plantas</option>
-                        <option value="Barracas">Barracas</option>
-                        <option value="Pibera">Pibera</option>
+            <div class="flex gap-4">
+                <div class="space-y-2">
+                    <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Centro Logístico</label>
+                    <select id="planta-filter" class="block w-64 p-3 bg-white border-gray-100 rounded-xl shadow-sm font-bold text-[#004f89] focus:ring-[#004f89]">
+                        <option value="Barracas">Barracas - Salom 657</option>
+                        <option value="Pibera">Pibera - Ruta 2</option>
                     </select>
                 </div>
-                <button onclick="openBlockModal()" class="bg-amber-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-amber-700 transition flex items-center gap-2 text-sm shadow-md">
-                    <span class="material-symbols-outlined text-sm">block</span> Bloquear Jornada
+                <button onclick="openBlockModal()" class="h-[46px] mt-auto px-6 bg-red-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-100">
+                    <span class="material-symbols-outlined">block</span> Bloquear Día
                 </button>
-            </div>
-            <div class="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
-                <div id='calendar'></div>
             </div>
         </div>
+        <div id="calendar"></div>
+    </div>
 
-        <!-- VISTA PROVEEDORES -->
-        <div id="users-view" class="hidden space-y-6">
-            <div class="flex justify-between items-center">
-                <h2 class="text-xl font-bold text-gray-700">Listado de Usuarios</h2>
-                <button onclick="openUserModal()" class="bg-[#004f89] text-white px-5 py-2.5 rounded-xl font-bold hover:bg-blue-900 transition flex items-center gap-2 shadow-sm">
-                    <span class="material-symbols-outlined">person_add</span> Nuevo Proveedor
-                </button>
-            </div>
-            <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-                <table class="w-full text-left">
-                    <thead class="bg-gray-50 border-b text-[10px] uppercase font-black text-gray-400">
-                        <tr><th class="px-8 py-4">Proveedor / ID</th><th class="px-8 py-4">Usuario</th><th class="px-8 py-4">Contraseña</th><th class="px-8 py-4 text-center">Acciones</th></tr>
-                    </thead>
-                    <tbody id="user-list-body" class="divide-y divide-gray-100"></tbody>
-                </table>
-            </div>
+    <!-- VISTA PROVEEDORES -->
+    <div id="view-prov" class="hidden space-y-8 animate-in fade-in duration-500">
+        <div class="flex justify-between items-center">
+             <h1 class="text-3xl font-black text-[#004f89] tracking-tight">Base de Proveedores</h1>
+             <button onclick="alert('Funcionalidad de sumar proveedores vía ERP sincronizada.')" class="px-6 py-3 bg-[#004f89] text-white font-black text-[10px] uppercase rounded-xl shadow-lg">Nuevo Proveedor</button>
+        </div>
+        <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
+            <table class="w-full text-left">
+                <thead class="bg-gray-50 border-b"><tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest"><th class="px-8 py-5">ID / Nombre</th><th class="px-8 py-5">Clave de Acceso</th><th class="px-8 py-5 text-center">Acciones</th></tr></thead>
+                <tbody id="prov-list" class="divide-y divide-gray-100"></tbody>
+            </table>
         </div>
     </div>
 </main>
 
-<!-- MODALES -->
-<div id="blockModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden animate-in zoom-in duration-200">
-        <div class="bg-amber-600 p-6 text-white flex justify-between items-center">
-            <h3 class="text-xl font-bold">Bloquear Fecha</h3>
-            <button onclick="closeBlockModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
+<!-- MODAL DETALLE TURNO -->
+<div id="shift-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-300">
+        <div class="bg-[#004f89] p-8 text-white relative">
+            <h3 id="modal-title" class="text-2xl font-black">Detalle de Turno</h3>
+            <p id="modal-date" class="text-blue-100 font-bold mt-1 uppercase text-xs"></p>
+            <button onclick="closeModal('shift-modal')" class="absolute top-6 right-6 hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
         </div>
+        <div class="p-8 space-y-6">
+            <div class="grid grid-cols-2 gap-4">
+                <div><label class="text-[9px] font-black text-gray-400 uppercase">Proveedor</label><p id="det-prov" class="font-bold text-gray-700"></p></div>
+                <div><label class="text-[9px] font-black text-gray-400 uppercase">Orden Compra</label><p id="det-oc" class="font-bold text-gray-700"></p></div>
+            </div>
+            <div><label class="text-[9px] font-black text-gray-400 uppercase">Artículo / Insumo</label><p id="det-art" class="font-bold text-gray-700 leading-tight"></p></div>
+            <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
+                <div><label class="text-[9px] font-black text-gray-400 uppercase block">Carga Estimada</label><p id="det-pallets" class="text-xl font-black text-[#004f89]">0 Pallets</p></div>
+                <div class="text-right"><label class="text-[9px] font-black text-gray-400 uppercase block">Hora Pactada</label><p id="det-hora" class="text-xl font-black text-[#004f89]">00:00</p></div>
+            </div>
+            <div class="flex gap-4 pt-4 border-t">
+                <button id="cancel-btn" class="flex-1 py-4 bg-red-50 text-red-600 font-black rounded-xl hover:bg-red-100 transition border border-red-200">CANCELAR TURNO</button>
+                <button onclick="alert('Función de re-programación en desarrollo')" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black rounded-xl hover:bg-gray-200 transition">MOVER TURNO</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL BLOQUEO -->
+<div id="block-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden scale-in-center">
+        <div class="bg-red-600 p-8 text-white"><h3 class="text-2xl font-black italic tracking-tighter">Bloquear Día</h3><p class="text-red-100 text-[10px] font-bold uppercase tracking-widest mt-1">Impedir toma de turnos nueva</p></div>
         <div class="p-8 space-y-5">
-            <div><label class="block font-black text-gray-400 uppercase text-[10px] mb-1">Fecha</label><input type="date" id="blockDate" class="w-full border-gray-200 rounded-xl bg-gray-50 p-3"></div>
-            <div><label class="block font-black text-gray-400 uppercase text-[10px] mb-1">Motivo</label><select id="blockReason" class="w-full border-gray-200 rounded-xl bg-gray-50 p-3"><option value="Inventario">Inventario</option><option value="Cierre de Mes">Cierre de Mes</option><option value="Mantenimiento">Mantenimiento</option></select></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Fecha a bloquear</label><input type="date" id="block-fecha" class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-bold"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Motivo del Bloqueo</label><input type="text" id="block-motivo" placeholder="Ej: Feriado, Inventario..." class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-medium"></div>
+            <div class="flex gap-3 mt-4">
+                <button onclick="closeModal('block-modal')" class="flex-1 py-4 text-gray-400 font-bold">Salir</button>
+                <button id="confirm-block-btn" class="flex-2 px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl hover:bg-red-700">CONFIRMAR BLOQUEO</button>
+            </div>
         </div>
-        <div class="bg-gray-50 p-6 border-t flex gap-3"><button onclick="closeBlockModal()" class="flex-1 px-4 py-2 text-gray-500 font-bold rounded-xl hover:bg-gray-200">Cerrar</button><button id="btnSaveBlock" class="flex-1 px-4 py-2 bg-amber-600 text-white font-bold rounded-xl shadow-lg">Confirmar</button></div>
-    </div>
-</div>
-
-<div id="eventModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden anime-in zoom-in duration-200">
-        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center"><h3 class="text-xl font-bold">Detalles del Turno</h3><button onclick="closeModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button></div>
-        <div class="p-8 space-y-6" id="modalContent"></div>
-        <div class="bg-gray-50 p-6 border-t flex gap-3"><button onclick="closeModal()" class="flex-1 px-4 py-2 text-gray-500 font-bold rounded-xl hover:bg-gray-200">Cerrar</button><button id="btnCancelarTurno" class="flex-1 px-4 py-2 bg-red-600 text-white font-bold rounded-xl">Cancelar Turno</button></div>
-    </div>
-</div>
-
-<div id="userModal" class="hidden fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden anime-in zoom-in duration-200">
-        <div class="bg-[#004f89] p-6 text-white flex justify-between items-center"><h3 class="text-xl font-bold">Nuevo Proveedor</h3><button onclick="closeUserModal()" class="hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button></div>
-        <div class="p-8 space-y-4">
-            <div><label class="text-[10px] text-gray-400 font-black uppercase">Nombre</label><input type="text" id="newNombre" class="w-full mt-1 border-gray-200 rounded-lg p-2 bg-gray-50"></div>
-            <div><label class="text-[10px] text-gray-400 font-black uppercase">ID Proveedor</label><input type="text" id="newProvId" class="w-full mt-1 border-gray-200 rounded-lg p-2 bg-gray-50"></div>
-            <div><label class="text-[10px] text-gray-400 font-black uppercase">Usuario</label><input type="text" id="newUser" class="w-full mt-1 border-gray-200 rounded-lg p-2 bg-gray-50"></div>
-            <div><label class="text-[10px] text-gray-400 font-black uppercase">Contraseña</label><div class="flex gap-2"><input type="text" id="newPass" class="flex-1 border-gray-200 rounded-lg p-2 font-mono"><button onclick="generatePass('newPass')" class="bg-blue-50 text-blue-600 p-2 rounded-lg border border-blue-100"><span class="material-symbols-outlined">autorenew</span></button></div></div>
-        </div>
-        <div class="bg-gray-50 p-6 border-t flex gap-3"><button onclick="closeUserModal()" class="flex-1 px-4 py-2 text-gray-500 font-bold hover:bg-gray-200 rounded-lg transition">Cancelar</button><button id="btnSaveUser" class="flex-1 px-4 py-2 bg-[#004f89] text-white font-bold rounded-lg shadow-lg">Crear</button></div>
     </div>
 </div>
 
 <script>
-    const sessionStr = localStorage.getItem('biosintex_session');
-    if (!sessionStr) window.location.href = 'login.html';
-    const currentUser = JSON.parse(sessionStr);
+    var db = {}; var calendar = null; var currentView = 'cal';
 
-    function logout() { localStorage.removeItem('biosintex_session'); window.location.href = 'login.html'; }
+    function switchTab(tab) {
+        currentView = tab;
+        document.getElementById('view-cal').classList.toggle('hidden', tab !== 'cal');
+        document.getElementById('view-prov').classList.toggle('hidden', tab !== 'prov');
+        document.getElementById('tab-cal').className = tab === 'cal' ? 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all bg-white shadow-sm text-[#004f89]' : 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all text-gray-400';
+        document.getElementById('tab-prov').className = tab === 'prov' ? 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all bg-white shadow-sm text-[#004f89]' : 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all text-gray-400';
+    }
 
-    var calendar;
-    var globalDB = {};
+    async function loadData() {
+        const res = await fetch(CONFIG.API_URL + "?action=get_all");
+        const rawData = await res.json();
+        db = {}; 
+        Object.keys(rawData).forEach(k => { db[k.trim().toLowerCase()] = rawData[k]; });
+        renderCalendar();
+        renderProviders();
+    }
 
-    document.addEventListener('DOMContentLoaded', async function() {
-        calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
-            initialView: 'timeGridWeek', locale: 'es', slotMinTime: '07:00:00', slotMaxTime: '14:00:00',
-            hiddenDays: [0, 6], allDaySlot: false,
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'timeGridWeek,dayGridMonth' },
-            eventClick: (info) => showEventDetails(info.event)
-        });
-        calendar.render();
+    function renderCalendar() {
+        const calEl = document.getElementById('calendar');
+        const currentPlanta = document.getElementById('planta-filter').value;
+        
+        // FILTRO DE BLOQUEOS
+        const blockedEvents = (db.bloqueos || []).map(b => ({
+            title: 'BLOQUEADO: ' + (b.motivo || 'No especificado'),
+            start: b.fecha,
+            allDay: true,
+            backgroundColor: '#ef4444',
+            textColor: '#ffffff',
+            display: 'block'
+        }));
 
-        window.applyFilter = () => {
-            const val = document.getElementById('plantaFilter').value;
-            calendar.getEvents().forEach(ev => {
-                // Si no tiene planta en extendedProps, es un BLOQUEO (siempre se muestra)
-                if (!ev.extendedProps.planta) return ev.setProp('display', 'block');
-                
-                // Si es un TURNO, filtramos por planta
-                const plantaEvent = String(ev.extendedProps.planta).toLowerCase();
-                const plantaFiltro = String(val).toLowerCase();
-                
-                if (val === 'all' || plantaEvent.includes(plantaFiltro)) {
-                    ev.setProp('display', 'auto');
-                } else {
-                    ev.setProp('display', 'none');
-                }
-            });
-        };
-
-        document.getElementById('plantaFilter').onchange = applyFilter;
-
-        window.switchTab = (viewId) => {
-            document.getElementById('calendar-view').classList.toggle('hidden', viewId !== 'calendar-view');
-            document.getElementById('users-view').classList.toggle('hidden', viewId !== 'users-view');
-            document.getElementById('btn-tab-cal').classList.toggle('active', viewId === 'calendar-view');
-            document.getElementById('btn-tab-users').classList.toggle('active', viewId === 'users-view');
-            if(viewId === 'users-view') renderUserList();
-        };
-
-        window.closeModal = () => document.getElementById('eventModal').classList.add('hidden');
-        window.openBlockModal = () => document.getElementById('blockModal').classList.remove('hidden');
-        window.closeBlockModal = () => document.getElementById('blockModal').classList.add('hidden');
-        window.openUserModal = () => document.getElementById('userModal').classList.remove('hidden');
-        window.closeUserModal = () => document.getElementById('userModal').classList.add('hidden');
-        window.generatePass = (id) => {
-            const charset = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-            let retVal = ""; for (let i = 0; i < 8; ++i) retVal += charset.charAt(Math.floor(Math.random() * charset.length));
-            if(id) document.getElementById(id).value = retVal;
-            return retVal;
-        };
-
-        function renderUserList() {
-            const users = (globalDB.usuarios || []).filter(u => u.rol !== 'supervisor');
-            document.getElementById('user-list-body').innerHTML = users.map(u => `
-                <tr class="hover:bg-gray-50 transition-colors">
-                    <td class="px-8 py-4 font-bold text-gray-800">${u.nombre}<br><span class="text-[9px] text-gray-400">ID: ${u.proveedor_id}</span></td>
-                    <td class="px-8 py-4 font-mono text-xs text-gray-500">${u.username}</td>
-                    <td class="px-8 py-4"><div class="flex items-center gap-2"><input type="text" value="${u.password}" readonly class="text-xs bg-gray-100 px-2 py-1 rounded w-28"><button onclick="resetPassword('${u.username}')" class="text-blue-600"><span class="material-symbols-outlined text-sm">autorenew</span></button></div></td>
-                    <td class="px-8 py-4 text-center cursor-pointer" onclick="alert('Email: ${u.email || "-"}\\nWhatsApp: ${u.telefono || "-"}')"><span class="material-symbols-outlined text-gray-300">contact_support</span></td>
-                </tr>
-            `).join('');
-        }
-
-        window.resetPassword = async (username) => {
-            const newPass = generatePass();
-            if(!confirm(`¿Reseteamos clave a: ${newPass}?`)) return;
-            try {
-                const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_user_password', username: username, newPassword: newPass }) });
-                if((await res.json()).success) { alert("¡Guardado!"); await loadData(); renderUserList(); }
-            } catch(e) { alert(e.message); }
-        };
-
-        document.getElementById('btnSaveBlock').onclick = async () => {
-            const dateVal = document.getElementById('blockDate').value;
-            const motiveVal = document.getElementById('blockReason').value;
-            if(!dateVal) return alert("Elegí fecha.");
-            const btn = document.getElementById('btnSaveBlock'); btn.disabled = true;
-            try {
-                const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'block_day', fecha: dateVal, motivo: motiveVal }) });
-                if((await res.json()).success) { alert("Fecha bloqueada."); location.reload(); }
-            } catch(e) { alert(e.message); } finally { btn.disabled = false; }
-        };
-
-        document.getElementById('btnSaveUser').onclick = async () => {
-            const data = { action:'add_user', nombre:document.getElementById('newNombre').value, proveedor_id:document.getElementById('newProvId').value, username:document.getElementById('newUser').value, password:document.getElementById('newPass').value, rol:'proveedor' };
-            if(!data.username || !data.password) return alert("Faltan datos.");
-            try {
-                const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify(data) });
-                if((await res.json()).success) { alert("¡Creado!"); location.reload(); }
-            } catch(e) { alert("Error de red."); }
-        };
-
-        window.showEventDetails = (event) => {
-            const p = event.extendedProps;
-            const supplierData = (globalDB.usuarios || []).find(u => String(u.proveedor_id).trim() === String(p.supplier_id).trim());
-            document.getElementById('modalContent').innerHTML = `
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="col-span-2 bg-blue-50/50 p-4 rounded-xl border border-blue-100">
-                        <p class="text-[9px] text-blue-600 font-black uppercase tracking-tighter">Contacto</p>
-                        <p class="text-sm font-bold text-blue-900">${supplierData?.email || '-'}</p>
-                        <p class="text-sm font-bold text-blue-900">${supplierData?.telefono || '-'}</p>
-                    </div>
-                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Proveedor</p><p class="font-bold text-sm text-gray-800">${p.supplier}</p></div>
-                    <div><p class="text-[10px] text-gray-400 font-bold uppercase">Planta</p><p class="font-bold text-sm text-gray-800">${p.planta}</p></div>
-                    <div class="col-span-2 border-t pt-4 font-black text-[#004f89] uppercase text-xs">Orden de Compra: ${p.oc}</div>
-                    <div class="col-span-2 text-xs text-gray-700 font-medium">${p.articulo}</div>
-                    <div class="col-span-2 bg-gray-50 p-3 rounded-lg border flex justify-between items-center"><span class="text-xs font-bold text-gray-400">Pallets</span><span class="font-black text-lg text-gray-800">${p.pallets}</span></div>
-                </div>`;
-            document.getElementById('btnCancelarTurno').onclick = async () => {
-                if(!confirm("¿Cancelar?")) return;
-                try {
-                    const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'cancel_shift', id: event.id }) });
-                    if((await res.json()).success) { event.remove(); closeModal(); }
-                } catch(e) { alert("Error."); }
-            };
-            document.getElementById('eventModal').classList.remove('hidden');
-        };
-
-        async function loadData() {
-            const res = await fetch(CONFIG.API_URL + "?action=get_all");
-            const rawDB = await res.json();
-            
-            globalDB = {};
-            Object.keys(rawDB).forEach(k => { globalDB[k.trim().toLowerCase()] = rawDB[k]; });
-
-            const events = (globalDB.turnos || []).filter(s => String(s.estado).toLowerCase().trim() !== 'cancelado').map(s => {
-                const pCount = parseInt(s.pallets) || 1; const endHours = Math.ceil(pCount/5);
-                const startStr = `${s.fecha}T${s.hora}:00`;
-                let endDate = new Date(startStr); endDate.setHours(endDate.getHours() + endHours);
-                const pad = (n) => String(n).padStart(2,'0');
-                const endStr = `${endDate.getFullYear()}-${pad(endDate.getMonth()+1)}-${pad(endDate.getDate())}T${pad(endDate.getHours())}:${pad(endDate.getMinutes())}:00`;
-                return { 
-                    id: s.id, title: `OC: ${s.oc}`, start: startStr, end: endStr, 
-                    backgroundColor: String(s.planta).toLowerCase().includes('barracas') ? '#004f89' : '#006e2d', 
-                    borderColor:'transparent', 
-                    extendedProps: { supplier:s.nombre_proveedor, supplier_id:s.proveedor_id, planta:s.planta, oc:s.oc, articulo:s.articulo, pallets:pCount } 
-                };
-            });
-
-            const blocks = (globalDB.bloqueos || []).map(b => ({
-                title: '🚫 DÍA BLOQUEADO: ' + b.motivo, start: b.fecha, allDay: true, 
-                backgroundColor: '#ef4444', textColor: '#ffffff'
+        // FILTRO DE TURNOS (Solo confirmados y de la planta seleccionada)
+        const shiftEvents = (db.turnos || [])
+            .filter(s => String(s.estado).toLowerCase().trim() === 'confirmado' && String(s.planta).toLowerCase().includes(currentPlanta.toLowerCase()))
+            .map(s => ({
+                id: s.id,
+                title: `${s.hora} - ${s.nombre_proveedor}`,
+                start: `${s.fecha}T${s.hora}:00`,
+                extendedProps: { ...s },
+                backgroundColor: '#004f89',
+                textColor: '#ffffff'
             }));
 
-            calendar.removeAllEventSources();
-            calendar.addEventSource(events);
-            calendar.addEventSource(blocks);
+        if (calendar) calendar.destroy();
+        calendar = new FullCalendar.Calendar(calEl, {
+            initialView: 'dayGridMonth',
+            locale: 'es',
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
+            events: [...blockedEvents, ...shiftEvents],
+            eventClick: info => {
+                if (info.event.extendedProps.id) openShiftDetail(info.event.extendedProps);
+            }
+        });
+        calendar.render();
+    }
 
-            // IMPORTANTE: Aplicar el filtro inmediatamente después de cargar los datos
-            setTimeout(applyFilter, 200);
-            
-            if(!document.getElementById('users-view').classList.contains('hidden')) renderUserList();
-        }
-        loadData();
-    });
+    function openShiftDetail(s) {
+        document.getElementById('modal-title').innerText = s.nombre_proveedor;
+        document.getElementById('modal-date').innerText = s.fecha.split('-').reverse().join('/') + " A LAS " + s.hora + " HS";
+        document.getElementById('det-prov').innerText = s.nombre_proveedor;
+        document.getElementById('det-oc').innerText = s.oc;
+        document.getElementById('det-art').innerText = s.articulo;
+        document.getElementById('det-pallets').innerText = (s.pallets || 1) + " Pallets";
+        document.getElementById('det-hora').innerText = s.hora + " hs";
+        
+        document.getElementById('cancel-btn').onclick = async () => {
+            if(!confirm("¿Cancelar este turno permanentemente?")) return;
+            document.getElementById('cancel-btn').innerText = "Cancelando...";
+            try {
+                const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify({ action:'cancel_shift', id:s.id }) });
+                if((await res.json()).success) { alert("Turno cancelado."); closeModal('shift-modal'); loadData(); }
+            } catch(e) { alert("Error."); }
+        };
+        document.getElementById('shift-modal').classList.remove('hidden');
+    }
+
+    function renderProviders() {
+        const body = document.getElementById('prov-list');
+        const users = (db.usuarios || []).filter(u => u.rol === 'proveedor');
+        body.innerHTML = users.map(u => `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-8 py-5">
+                    <p class="font-black text-gray-800 text-sm leading-none mb-1">${u.nombre || u.username}</p>
+                    <p class="text-[10px] font-bold text-gray-400 uppercase">ID: ${u.proveedor_id || '---'}</p>
+                </td>
+                <td class="px-8 py-5">
+                    <p class="font-mono text-xs font-bold text-[#004f89] bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 flex justify-between items-center group">
+                        <span id="pwd-${u.username}">${u.password}</span>
+                        <button onclick="resetPass('${u.username}')" class="hidden group-hover:block text-[9px] font-black uppercase bg-[#004f89] text-white px-2 py-1 rounded-lg">Reset</button>
+                    </p>
+                </td>
+                <td class="px-8 py-5 text-center">
+                    <button onclick="alert('Info: ${u.email || "Sin mail"} / ${u.telefono || "Sin tel"}')" class="p-2 text-gray-400 hover:text-[#004f89]"><span class="material-symbols-outlined">info</span></button>
+                </td>
+            </tr>
+        `).join('') || '<tr><td colspan="3" class="p-10 text-center text-gray-400 italic">No hay proveedores registrados.</td></tr>';
+    }
+
+    async function resetPass(user) {
+        if(!confirm("¿Generar nueva clave?")) return;
+        const newPass = Math.random().toString(36).slice(-6).toUpperCase();
+        try {
+            await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_user_password', username: user, newPassword: newPass }) });
+            alert("Nueva clave generada: " + newPass); loadData();
+        } catch(e) { alert("Error."); }
+    }
+
+    function openBlockModal() { document.getElementById('block-modal').classList.remove('hidden'); }
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+    document.getElementById('planta-filter').onchange = renderCalendar;
+    
+    document.getElementById('confirm-block-btn').onclick = async () => {
+        const date = document.getElementById('block-fecha').value;
+        const note = document.getElementById('block-motivo').value || "Bloqueado por Supervisor";
+        if(!date) return alert("Elegí fecha.");
+        
+        const btn = document.getElementById('confirm-block-btn');
+        btn.disabled = true; btn.innerText = "BLOQUEANDO...";
+        try {
+            const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'block_day', fecha: date, motivo: note }) });
+            if((await res.json()).success) { alert("Día bloqueado Correctamente."); closeModal('block-modal'); loadData(); }
+        } catch(e) { alert("Error."); btn.disabled = false; btn.innerText = "CONFIRMAR BLOQUEO"; }
+    };
+
+    loadData();
 </script>
 </body>
 </html>
