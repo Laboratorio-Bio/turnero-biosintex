@@ -16,9 +16,8 @@
         .fc { background: white; padding: 20px; border-radius: 24px; box-shadow: 0 4px 20px -5px rgb(0 0 0 / 0.1); border: none !important; }
         .fc-header-toolbar { margin-bottom: 20px !important; }
         .fc-button-primary { background-color: #004f89 !important; border: none !important; border-radius: 12px !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 10px !important; }
-        .fc-event { border: none !important; padding: 4px 8px !important; border-radius: 8px !important; font-weight: bold !important; }
-        .fc-daygrid-day:hover { background-color: #f0f7ff; cursor: pointer; }
-        .fc-timegrid-slot { height: 3em !important; }
+        .fc-event { border: none !important; padding: 6px 10px !important; border-radius: 10px !important; font-weight: 800 !important; font-size: 11px !important; cursor: pointer; }
+        .fc-timegrid-slot { height: 4em !important; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
@@ -35,31 +34,29 @@
 </header>
 
 <main class="pt-24 pb-12 px-10">
-    <div id="view-cal" class="space-y-6 animate-in fade-in duration-500">
+    <div id="view-cal" class="space-y-6">
         <div class="flex justify-between items-end">
             <div><h1 class="text-2xl font-black text-[#004f89]">Gestión de Turnos</h1><p class="text-gray-400 font-bold text-[10px] uppercase tracking-widest">Recepción: 07:00 a 13:00 hs</p></div>
             <div class="flex gap-4 items-end">
                 <div class="space-y-1">
-                    <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Filtrar Planta</label>
+                    <label class="text-[9px] font-black text-gray-400 uppercase tracking-widest ml-1">Centro Logístico</label>
                     <select id="planta-filter" class="block w-64 p-3.5 bg-white border-gray-100 rounded-2xl shadow-sm font-bold text-[#004f89] focus:ring-[#004f89]">
-                        <option value="Barracas">Barracas - Salom 657</option>
+                        <option value="Barracas">Barracas - Salom 651/657</option>
                         <option value="Pibera">Pibera - Ruta 2</option>
                     </select>
                 </div>
-                <button onclick="openBlockModal()" class="h-[52px] px-8 bg-red-600 text-white font-black text-[10px] uppercase rounded-2xl hover:bg-red-700 transition flex items-center gap-2 shadow-xl shadow-red-100">
-                    <span class="material-symbols-outlined text-base">block</span> Bloquear Día
-                </button>
+                <button onclick="openBlockModal()" class="h-[52px] px-8 bg-red-600 text-white font-black text-[10px] uppercase rounded-2xl hover:bg-red-700 transition flex items-center gap-2 shadow-xl shadow-red-100"><span class="material-symbols-outlined text-base">block</span> Bloquear Día</button>
             </div>
         </div>
         <div id="calendar"></div>
     </div>
 
-    <div id="view-prov" class="hidden space-y-6 animate-in fade-in duration-500">
-        <h1 class="text-2xl font-black text-[#004f89]">Control de Proveedores</h1>
+    <div id="view-prov" class="hidden space-y-6">
+        <h1 class="text-2xl font-black text-[#004f89]">Base de Proveedores</h1>
         <div class="bg-white rounded-[2rem] shadow-xl overflow-hidden border border-gray-100">
-            <table class="w-full text-left">
-                <thead class="bg-gray-50 border-b"><tr class="text-[9px] font-black text-gray-400 uppercase tracking-widest"><th class="px-8 py-6">ID / Proveedor</th><th class="px-8 py-6">Clave actual</th><th class="px-8 py-6 text-center">Datos contacto</th></tr></thead>
-                <tbody id="prov-list" class="divide-y divide-gray-100"></tbody>
+            <table class="w-full text-left font-bold text-[11px]">
+                <thead class="bg-gray-50 border-b"><tr class="text-[9px] font-black text-gray-400 uppercase tracking-widest"><th class="px-8 py-6">ID / Proveedor</th><th class="px-8 py-6">Clave</th><th class="px-8 py-6 text-center">Contacto</th></tr></thead>
+                <tbody id="prov-list" class="divide-y divide-gray-100 text-gray-700"></tbody>
             </table>
         </div>
     </div>
@@ -76,14 +73,14 @@
         <div class="p-10 space-y-8">
             <div class="grid grid-cols-2 gap-6">
                 <div><label class="text-[9px] font-black text-gray-400 uppercase">Proveedor</label><p id="det-prov" class="font-bold text-gray-800 text-sm"></p></div>
-                <div><label class="text-[9px] font-black text-gray-400 uppercase">Orden de Compra</label><p id="det-oc" class="font-bold text-gray-800 text-sm"></p></div>
+                <div><label class="text-[9px] font-black text-gray-400 uppercase">Orden Compra</label><p id="det-oc" class="font-bold text-gray-800 text-sm"></p></div>
             </div>
-            <div><label class="text-[9px] font-black text-gray-400 uppercase">Insumo a Entregar</label><p id="det-art" class="font-bold text-gray-600 text-sm leading-tight"></p></div>
+            <div><label class="text-[9px] font-black text-gray-400 uppercase">Insumo</label><p id="det-art" class="font-bold text-gray-600 text-sm leading-tight"></p></div>
             <div class="flex justify-between items-center bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
                 <div><label class="text-[9px] font-black text-[#004f89] uppercase block mb-1">Carga (Pallets)</label><p id="det-pallets" class="text-3xl font-black text-[#004f89]">0</p></div>
-                <div class="text-right"><label class="text-[9px] font-black text-[#004f89] uppercase block mb-1">Horario Inicio</label><p id="det-hora" class="text-3xl font-black text-[#004f89]">00:00</p></div>
+                <div class="text-right"><label class="text-[9px] font-black text-[#004f89] uppercase block mb-1">Hora Inicio</label><p id="det-hora" class="text-3xl font-black text-[#004f89]">00:00</p></div>
             </div>
-            <button id="cancel-btn" class="w-full py-5 bg-red-600 text-white font-black rounded-2xl shadow-xl hover:bg-red-700 transition">CANCELAR ESTE TURNO</button>
+            <button id="cancel-btn" class="w-full py-5 bg-red-600 text-white font-black rounded-2xl shadow-xl hover:bg-red-700">CANCELAR TURNO</button>
         </div>
     </div>
 </div>
@@ -91,10 +88,10 @@
 <!-- MODAL BLOQUEO -->
 <div id="block-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-sm overflow-hidden animate-in fade-in duration-300">
-        <div class="bg-red-600 p-8 text-white"><h3 class="text-xl font-black uppercase tracking-tighter">Bloquear Día</h3></div>
+        <div class="bg-red-600 p-8 text-white"><h3 class="text-xl font-bold uppercase tracking-tighter">Bloquear Día</h3></div>
         <div class="p-8 space-y-5">
-            <div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Fecha</label><input type="date" id="block-fecha" class="w-full mt-2 p-4 bg-gray-50 border-none rounded-2xl font-bold"></div>
-            <div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Motivo</label><input type="text" id="block-motivo" placeholder="Feriado / Inventario" class="w-full mt-2 p-4 bg-gray-50 border-none rounded-2xl"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Fecha</label><input type="date" id="block-fecha" class="w-full mt-2 p-4 bg-gray-50 border-none rounded-2xl font-bold"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Motivo</label><input type="text" id="block-motivo" placeholder="Ej: Inventario" class="w-full mt-2 p-4 bg-gray-50 border-none rounded-2xl"></div>
             <div class="flex gap-2 mt-4">
                 <button onclick="closeModal('block-modal')" class="flex-1 py-4 text-gray-400 font-bold text-xs uppercase">Salir</button>
                 <button id="confirm-block-btn" class="flex-2 px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl">BLOQUEAR</button>
@@ -138,18 +135,31 @@
         }));
 
         const shifts = (db.turnos || [])
-            .filter(s => String(s.estado).toLowerCase().trim() === 'confirmado' && String(s.planta).toLowerCase().includes(filterPlanta))
-            .map(s => ({
-                id: s.id,
-                title: `${s.hora} | ${s.nombre_proveedor}`,
-                start: `${s.fecha}T${s.hora}:00`,
-                backgroundColor: '#004f89',
-                extendedProps: { ...s }
-            }));
+            .filter(s => {
+                const isConfirmed = String(s.estado).toLowerCase().trim() === 'confirmado';
+                const p = String(s.planta).toLowerCase();
+                const matchesPlanta = filterPlanta === 'barracas' ? (p.includes('barracas') || p.includes('salom') || p.includes('biosintex')) : (p.includes('pibera') || p.includes('ruta 2') || p.includes('leloir'));
+                return isConfirmed && matchesPlanta;
+            })
+            .map(s => {
+                const pallets = parseInt(s.pallets) || 1;
+                const hoursNeeded = Math.ceil(pallets / 5);
+                const startHour = parseInt(s.hora.split(':')[0]);
+                const endHour = startHour + hoursNeeded;
+                
+                return {
+                    id: s.id,
+                    title: `${s.hora} | ${s.nombre_proveedor} (${pallets} PLT)`,
+                    start: `${s.fecha}T${s.hora}:00`,
+                    end: `${s.fecha}T${String(endHour).padStart(2, '0')}:00`,
+                    backgroundColor: '#004f89',
+                    extendedProps: { ...s }
+                };
+            });
 
         if (calendar) calendar.destroy();
         calendar = new FullCalendar.Calendar(calEl, {
-            initialView: 'dayGridMonth',
+            initialView: 'timeGridWeek',
             slotMinTime: '07:00:00',
             slotMaxTime: '14:00:00',
             locale: 'es',
@@ -171,7 +181,7 @@
         
         document.getElementById('cancel-btn').onclick = async () => {
             if(!confirm("¿CONFIRMAR CANCELACIÓN?")) return;
-            const btn = document.getElementById('cancel-btn'); btn.disabled = true; btn.innerText = "PROCESANDO...";
+            const btn = document.getElementById('cancel-btn'); btn.disabled = true; btn.innerText = "PROC...";
             try {
                 const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify({ action:'cancel_shift', id:s.id }) });
                 if((await res.json()).success) { closeModal('shift-modal'); loadData(); }
@@ -181,7 +191,7 @@
     }
 
     function renderProviders() {
-        const users = (db.usuarios || []).filter(u => u.rol === 'proveedor');
+        const users = (db.usuarios || []).filter(u => String(u.rol).toLowerCase() === 'proveedor');
         document.getElementById('prov-list').innerHTML = users.map(u => `
             <tr class="hover:bg-gray-50">
                 <td class="px-8 py-6">
