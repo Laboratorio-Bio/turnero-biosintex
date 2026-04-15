@@ -14,10 +14,11 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8f9ff;}
         h1, h2, h3 { font-family: 'Manrope', sans-serif; }
         .fc { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: none !important; }
-        .fc-header-toolbar { margin-bottom: 30px !important; }
-        .fc-button-primary { background-color: #004f89 !important; border: none !important; border-radius: 10px !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 11px !important; }
-        .fc-event { border: none !important; padding: 4px 8px !important; border-radius: 6px !important; }
+        .fc-header-toolbar { margin-bottom: 20px !important; }
+        .fc-button-primary { background-color: #004f89 !important; border: none !important; border-radius: 8px !important; font-weight: bold !important; text-transform: uppercase !important; font-size: 10px !important; }
+        .fc-event { border: none !important; padding: 2px 5px !important; border-radius: 4px !important; font-size: 11px !important; }
         .fc-daygrid-day:hover { background-color: #f0f7ff; cursor: pointer; }
+        .fc-v-event { background-color: #004f89; border: none; }
     </style>
 </head>
 <body class="bg-[#f8f9ff] text-[#0b1c30] antialiased">
@@ -35,22 +36,22 @@
 
 <main class="pt-24 pb-12 px-10">
     <!-- VISTA CALENDARIO -->
-    <div id="view-cal" class="space-y-8 animate-in fade-in duration-500">
+    <div id="view-cal" class="space-y-6 animate-in fade-in duration-500">
         <div class="flex justify-between items-end">
-            <div class="space-y-1">
-                <h1 class="text-3xl font-black text-[#004f89] tracking-tight">Gestión de Turnos</h1>
-                <p class="text-gray-400 font-medium">Control de recepciones y bloqueos de planta.</p>
+            <div>
+                <h1 class="text-2xl font-black text-[#004f89]">Gestión de Turnos</h1>
+                <p class="text-gray-400 font-medium text-xs">Recepción: 07:00 a 13:00 hs</p>
             </div>
-            <div class="flex gap-4">
-                <div class="space-y-2">
+            <div class="flex gap-4 items-end">
+                <div class="space-y-1">
                     <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Centro Logístico</label>
                     <select id="planta-filter" class="block w-64 p-3 bg-white border-gray-100 rounded-xl shadow-sm font-bold text-[#004f89] focus:ring-[#004f89]">
                         <option value="Barracas">Barracas - Salom 657</option>
                         <option value="Pibera">Pibera - Ruta 2</option>
                     </select>
                 </div>
-                <button onclick="openBlockModal()" class="h-[46px] mt-auto px-6 bg-red-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-100">
-                    <span class="material-symbols-outlined">block</span> Bloquear Día
+                <button onclick="openBlockModal()" class="h-[46px] px-6 bg-red-600 text-white font-black text-[10px] uppercase rounded-xl hover:bg-red-700 transition flex items-center gap-2 shadow-lg shadow-red-100">
+                    <span class="material-symbols-outlined text-sm">block</span> Bloquear Día
                 </button>
             </div>
         </div>
@@ -58,14 +59,13 @@
     </div>
 
     <!-- VISTA PROVEEDORES -->
-    <div id="view-prov" class="hidden space-y-8 animate-in fade-in duration-500">
+    <div id="view-prov" class="hidden space-y-6 animate-in fade-in duration-500">
         <div class="flex justify-between items-center">
-             <h1 class="text-3xl font-black text-[#004f89] tracking-tight">Base de Proveedores</h1>
-             <button onclick="alert('Funcionalidad de sumar proveedores vía ERP sincronizada.')" class="px-6 py-3 bg-[#004f89] text-white font-black text-[10px] uppercase rounded-xl shadow-lg">Nuevo Proveedor</button>
+             <h1 class="text-2xl font-black text-[#004f89]">Base de Proveedores</h1>
         </div>
         <div class="bg-white rounded-3xl shadow-xl overflow-hidden border border-gray-100">
             <table class="w-full text-left">
-                <thead class="bg-gray-50 border-b"><tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest"><th class="px-8 py-5">ID / Nombre</th><th class="px-8 py-5">Clave de Acceso</th><th class="px-8 py-5 text-center">Acciones</th></tr></thead>
+                <thead class="bg-gray-50 border-b"><tr class="text-[10px] font-black text-gray-400 uppercase tracking-widest"><th class="px-8 py-5">ID / Proveedor</th><th class="px-8 py-5">Clave de Acceso actual</th><th class="px-8 py-5 text-center">Info</th></tr></thead>
                 <tbody id="prov-list" class="divide-y divide-gray-100"></tbody>
             </table>
         </div>
@@ -76,7 +76,7 @@
 <div id="shift-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in duration-300">
         <div class="bg-[#004f89] p-8 text-white relative">
-            <h3 id="modal-title" class="text-2xl font-black">Detalle de Turno</h3>
+            <h3 id="modal-title" class="text-2xl font-black">Detalle</h3>
             <p id="modal-date" class="text-blue-100 font-bold mt-1 uppercase text-xs"></p>
             <button onclick="closeModal('shift-modal')" class="absolute top-6 right-6 hover:bg-white/20 rounded-full p-2"><span class="material-symbols-outlined">close</span></button>
         </div>
@@ -85,15 +85,12 @@
                 <div><label class="text-[9px] font-black text-gray-400 uppercase">Proveedor</label><p id="det-prov" class="font-bold text-gray-700"></p></div>
                 <div><label class="text-[9px] font-black text-gray-400 uppercase">Orden Compra</label><p id="det-oc" class="font-bold text-gray-700"></p></div>
             </div>
-            <div><label class="text-[9px] font-black text-gray-400 uppercase">Artículo / Insumo</label><p id="det-art" class="font-bold text-gray-700 leading-tight"></p></div>
+            <div><label class="text-[9px] font-black text-gray-400 uppercase">Insumo</label><p id="det-art" class="font-bold text-gray-700 text-sm leading-tight"></p></div>
             <div class="flex justify-between items-center bg-gray-50 p-4 rounded-2xl">
-                <div><label class="text-[9px] font-black text-gray-400 uppercase block">Carga Estimada</label><p id="det-pallets" class="text-xl font-black text-[#004f89]">0 Pallets</p></div>
-                <div class="text-right"><label class="text-[9px] font-black text-gray-400 uppercase block">Hora Pactada</label><p id="det-hora" class="text-xl font-black text-[#004f89]">00:00</p></div>
+                <div><label class="text-[9px] font-black text-gray-400 uppercase block">Carga</label><p id="det-pallets" class="text-xl font-black text-[#004f89]">0 Pallets</p></div>
+                <div class="text-right"><label class="text-[9px] font-black text-gray-400 uppercase block">Hora</label><p id="det-hora" class="text-xl font-black text-[#004f89]">00:00</p></div>
             </div>
-            <div class="flex gap-4 pt-4 border-t">
-                <button id="cancel-btn" class="flex-1 py-4 bg-red-50 text-red-600 font-black rounded-xl hover:bg-red-100 transition border border-red-200">CANCELAR TURNO</button>
-                <button onclick="alert('Función de re-programación en desarrollo')" class="flex-1 py-4 bg-gray-100 text-gray-500 font-black rounded-xl hover:bg-gray-200 transition">MOVER TURNO</button>
-            </div>
+            <button id="cancel-btn" class="w-full py-4 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 transition shadow-lg shadow-red-100">CANCELAR TURNO</button>
         </div>
     </div>
 </div>
@@ -101,10 +98,10 @@
 <!-- MODAL BLOQUEO -->
 <div id="block-modal" class="hidden fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
     <div class="bg-white rounded-[2rem] shadow-2xl w-full max-w-sm overflow-hidden scale-in-center">
-        <div class="bg-red-600 p-8 text-white"><h3 class="text-2xl font-black italic tracking-tighter">Bloquear Día</h3><p class="text-red-100 text-[10px] font-bold uppercase tracking-widest mt-1">Impedir toma de turnos nueva</p></div>
+        <div class="bg-red-600 p-8 text-white"><h3 class="text-2xl font-black italic tracking-tighter">Bloquear Día</h3><p class="text-red-100 text-[10px] font-bold uppercase tracking-widest mt-1">Suspender recepción nueva</p></div>
         <div class="p-8 space-y-5">
-            <div><label class="text-[10px] font-black text-gray-400 uppercase">Fecha a bloquear</label><input type="date" id="block-fecha" class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-bold"></div>
-            <div><label class="text-[10px] font-black text-gray-400 uppercase">Motivo del Bloqueo</label><input type="text" id="block-motivo" placeholder="Ej: Feriado, Inventario..." class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-medium"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Fecha</label><input type="date" id="block-fecha" class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-bold"></div>
+            <div><label class="text-[10px] font-black text-gray-400 uppercase">Motivo</label><input type="text" id="block-motivo" placeholder="Ej: Feriado" class="w-full mt-1 p-4 bg-gray-50 border-gray-100 rounded-2xl font-medium"></div>
             <div class="flex gap-3 mt-4">
                 <button onclick="closeModal('block-modal')" class="flex-1 py-4 text-gray-400 font-bold">Salir</button>
                 <button id="confirm-block-btn" class="flex-2 px-8 py-4 bg-red-600 text-white font-black rounded-2xl shadow-xl hover:bg-red-700">CONFIRMAR BLOQUEO</button>
@@ -122,46 +119,51 @@
         document.getElementById('view-prov').classList.toggle('hidden', tab !== 'prov');
         document.getElementById('tab-cal').className = tab === 'cal' ? 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all bg-white shadow-sm text-[#004f89]' : 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all text-gray-400';
         document.getElementById('tab-prov').className = tab === 'prov' ? 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all bg-white shadow-sm text-[#004f89]' : 'px-6 py-2 rounded-lg font-black text-[10px] uppercase transition-all text-gray-400';
+        if(tab === 'cal') setTimeout(() => { if(calendar) calendar.render(); }, 100);
     }
 
     async function loadData() {
-        const res = await fetch(CONFIG.API_URL + "?action=get_all");
-        const rawData = await res.json();
-        db = {}; 
-        Object.keys(rawData).forEach(k => { db[k.trim().toLowerCase()] = rawData[k]; });
-        renderCalendar();
-        renderProviders();
+        try {
+            const res = await fetch(CONFIG.API_URL + "?action=get_all");
+            const raw = await res.json();
+            db = {}; Object.keys(raw).forEach(k => { db[k.trim().toLowerCase()] = raw[k]; });
+            renderCalendar();
+            renderProviders();
+        } catch(e) { console.error("Error cargando datos:", e); }
     }
 
     function renderCalendar() {
         const calEl = document.getElementById('calendar');
-        const currentPlanta = document.getElementById('planta-filter').value;
+        const filterPlanta = document.getElementById('planta-filter').value.toLowerCase();
         
-        // FILTRO DE BLOQUEOS
+        // BLOQUEOS
         const blockedEvents = (db.bloqueos || []).map(b => ({
-            title: 'BLOQUEADO: ' + (b.motivo || 'No especificado'),
+            title: 'BLOQUEADO: ' + (b.motivo || 'Cerrado'),
             start: b.fecha,
             allDay: true,
-            backgroundColor: '#ef4444',
-            textColor: '#ffffff',
-            display: 'block'
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            textColor: '#b91c1c',
+            borderColor: '#ef4444',
+            display: 'background'
         }));
 
-        // FILTRO DE TURNOS (Solo confirmados y de la planta seleccionada)
+        // TURNOS CONFIRMADOS
         const shiftEvents = (db.turnos || [])
-            .filter(s => String(s.estado).toLowerCase().trim() === 'confirmado' && String(s.planta).toLowerCase().includes(currentPlanta.toLowerCase()))
+            .filter(s => String(s.estado).toLowerCase().trim() === 'confirmado' && String(s.planta).toLowerCase().includes(filterPlanta))
             .map(s => ({
                 id: s.id,
                 title: `${s.hora} - ${s.nombre_proveedor}`,
                 start: `${s.fecha}T${s.hora}:00`,
-                extendedProps: { ...s },
                 backgroundColor: '#004f89',
-                textColor: '#ffffff'
+                extendedProps: { ...s }
             }));
 
         if (calendar) calendar.destroy();
         calendar = new FullCalendar.Calendar(calEl, {
-            initialView: 'dayGridMonth',
+            initialView: 'timeGridWeek',
+            slotMinTime: '07:00:00',
+            slotMaxTime: '14:00:00',
+            allDaySlot: true,
             locale: 'es',
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
             events: [...blockedEvents, ...shiftEvents],
@@ -174,7 +176,7 @@
 
     function openShiftDetail(s) {
         document.getElementById('modal-title').innerText = s.nombre_proveedor;
-        document.getElementById('modal-date').innerText = s.fecha.split('-').reverse().join('/') + " A LAS " + s.hora + " HS";
+        document.getElementById('modal-date').innerText = s.fecha.split('-').reverse().join('/') + " | " + s.hora + " HS";
         document.getElementById('det-prov').innerText = s.nombre_proveedor;
         document.getElementById('det-oc').innerText = s.oc;
         document.getElementById('det-art').innerText = s.articulo;
@@ -182,12 +184,12 @@
         document.getElementById('det-hora').innerText = s.hora + " hs";
         
         document.getElementById('cancel-btn').onclick = async () => {
-            if(!confirm("¿Cancelar este turno permanentemente?")) return;
-            document.getElementById('cancel-btn').innerText = "Cancelando...";
+            if(!confirm("¿Cancelar este turno?")) return;
+            const btn = document.getElementById('cancel-btn'); btn.disabled = true; btn.innerText = "PROC...")
             try {
                 const res = await fetch(CONFIG.API_URL, { method:'POST', body:JSON.stringify({ action:'cancel_shift', id:s.id }) });
-                if((await res.json()).success) { alert("Turno cancelado."); closeModal('shift-modal'); loadData(); }
-            } catch(e) { alert("Error."); }
+                if((await res.json()).success) { closeModal('shift-modal'); loadData(); }
+            } catch(e) { btn.disabled = false; btn.innerText = "CANCELAR TURNO"; }
         };
         document.getElementById('shift-modal').classList.remove('hidden');
     }
@@ -196,31 +198,21 @@
         const body = document.getElementById('prov-list');
         const users = (db.usuarios || []).filter(u => u.rol === 'proveedor');
         body.innerHTML = users.map(u => `
-            <tr class="hover:bg-gray-50 transition-colors">
+            <tr>
                 <td class="px-8 py-5">
                     <p class="font-black text-gray-800 text-sm leading-none mb-1">${u.nombre || u.username}</p>
-                    <p class="text-[10px] font-bold text-gray-400 uppercase">ID: ${u.proveedor_id || '---'}</p>
+                    <p class="text-[9px] font-bold text-gray-400 uppercase">ID: ${u.proveedor_id || '---'}</p>
                 </td>
                 <td class="px-8 py-5">
-                    <p class="font-mono text-xs font-bold text-[#004f89] bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 flex justify-between items-center group">
-                        <span id="pwd-${u.username}">${u.password}</span>
-                        <button onclick="resetPass('${u.username}')" class="hidden group-hover:block text-[9px] font-black uppercase bg-[#004f89] text-white px-2 py-1 rounded-lg">Reset</button>
+                    <p class="font-mono text-xs font-bold text-[#004f89] bg-blue-50 px-3 py-1.5 rounded-xl border border-blue-100 inline-block">
+                        ${u.password}
                     </p>
                 </td>
                 <td class="px-8 py-5 text-center">
-                    <button onclick="alert('Info: ${u.email || "Sin mail"} / ${u.telefono || "Sin tel"}')" class="p-2 text-gray-400 hover:text-[#004f89]"><span class="material-symbols-outlined">info</span></button>
+                    <button onclick="alert('Mail: ${u.email || "---"}\\nTel: ${u.telefono || "---"}')" class="p-2 text-gray-300 hover:text-[#004f89] transition-colors"><span class="material-symbols-outlined">contact_support</span></button>
                 </td>
             </tr>
-        `).join('') || '<tr><td colspan="3" class="p-10 text-center text-gray-400 italic">No hay proveedores registrados.</td></tr>';
-    }
-
-    async function resetPass(user) {
-        if(!confirm("¿Generar nueva clave?")) return;
-        const newPass = Math.random().toString(36).slice(-6).toUpperCase();
-        try {
-            await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'update_user_password', username: user, newPassword: newPass }) });
-            alert("Nueva clave generada: " + newPass); loadData();
-        } catch(e) { alert("Error."); }
+        `).join('') || '<tr><td colspan="3" class="p-10 text-center text-gray-400">Sin proveedores.</td></tr>';
     }
 
     function openBlockModal() { document.getElementById('block-modal').classList.remove('hidden'); }
@@ -230,14 +222,13 @@
     
     document.getElementById('confirm-block-btn').onclick = async () => {
         const date = document.getElementById('block-fecha').value;
-        const note = document.getElementById('block-motivo').value || "Bloqueado por Supervisor";
+        const note = document.getElementById('block-motivo').value || "Cerrado";
         if(!date) return alert("Elegí fecha.");
-        
         const btn = document.getElementById('confirm-block-btn');
         btn.disabled = true; btn.innerText = "BLOQUEANDO...";
         try {
             const res = await fetch(CONFIG.API_URL, { method: 'POST', body: JSON.stringify({ action: 'block_day', fecha: date, motivo: note }) });
-            if((await res.json()).success) { alert("Día bloqueado Correctamente."); closeModal('block-modal'); loadData(); }
+            if((await res.json()).success) { closeModal('block-modal'); loadData(); }
         } catch(e) { alert("Error."); btn.disabled = false; btn.innerText = "CONFIRMAR BLOQUEO"; }
     };
 
